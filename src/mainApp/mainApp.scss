@@ -1,0 +1,32 @@
+.main {
+  position: relative;
+  width: 100%;
+  &::before {
+    --size: 0;
+    content: '';
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    background: radial-gradient(circle closest-side, rgb(0, 61, 35), transparent);
+    transform: translate(-50%, -50%);
+    transition: width 0.2s ease, height 0.2s ease;
+  }
+
+  &:hover::before {
+    --size: 1000px;
+  }
+
+  .mainApp {
+    position: relative;
+  }
+}
+
+@media screen and (max-width: 1080px) {
+  .main {
+    &::before {
+      background: radial-gradient(circle closest-side, rgba(0, 61, 35, 0), transparent);
+    }
+  }
+}

@@ -1,0 +1,47 @@
+.achievements{
+    margin: 20vh 10vw 0vh 7.5vw;
+    line-height: 5vh;
+    h2{
+        font-size: 36px;
+        font-weight: 600;
+    }
+    p{
+        margin-top: 2.5vh;
+    }
+    .experience{
+        display: flex;
+        margin-top: 10vh;
+        .left{
+            flex: 2;
+            padding-right: 7.5vw;
+            .row{
+                margin-bottom: 3vh;
+                .toprow{
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 18px;
+                    font-weight: 500;
+                }
+                .bottomrow{
+                    font-size: 14px;
+                    width: 40vw;
+                    line-height: normal;
+                }
+            }
+        }
+        .right{
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}
+
+@media screen and (max-width: 1080px) {
+    .achievements{
+        .experience{
+            flex-direction: column;
+        }
+    }
+}

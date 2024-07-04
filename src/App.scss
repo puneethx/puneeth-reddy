@@ -1,0 +1,31 @@
+.app{
+  font-family: 'poppins',sans-serif;
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+}
+
+ /* Designing for scroll-bar */
+ ::-webkit-scrollbar {
+  width: 7px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #000000;
+
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #03844c;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #039556;
+}
+
+

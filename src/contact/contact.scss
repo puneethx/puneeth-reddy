@@ -1,0 +1,30 @@
+.contact{
+    margin: 20vh 10vw 15vh 7.5vw;
+    line-height: 5vh;
+    h2{
+        font-size: 36px;
+        font-weight: 600;
+    }
+    p{
+        margin-top: 2.5vh;
+    }
+    .context{
+        display: flex;
+        gap: 4vw;
+        a{
+            color: white;
+        }
+        .row{
+            display: flex;
+            gap: 15px;
+        }
+    }
+}
+
+@media screen and (max-width: 1080px) {
+    .contact{
+        .context{
+            flex-wrap: wrap;
+        }
+    }
+}

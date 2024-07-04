@@ -1,33 +1,21 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './App.scss'
+import MainApp from './mainApp/mainApp'
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  window.onload = function () {
+    var back = document.querySelector('.main')
+    back.onmousemove = function (e) {
+        var x = e.pageX - back.offsetLeft - back.offsetParent.offsetLeft
+        var y = e.pageY - back.offsetTop - back.offsetParent.offsetTop
+        back.style.setProperty('--x', x + 'px')
+        back.style.setProperty('--y', y + 'px')
+    }
+}
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="app">
+        <MainApp/>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        PUNEETH REDDY T
-      </p>
     </>
   )
 }

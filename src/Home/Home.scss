@@ -1,0 +1,134 @@
+.home {
+    display: flex;
+    margin-top: 7.5vh;
+    position: relative;
+    width: 100%;
+
+    .left {
+        flex: 1;
+        display: flex;
+        z-index: 2;
+        width: 50vw;
+        position: relative;
+        margin-left: 12.5vw;
+        flex-direction: column;
+        justify-content: center;
+
+        &:hover {
+            .text4 {
+                border-bottom: 2px solid white;
+                transition: border-bottom 0.2s ease-in-out 0.4s;
+            }
+        }
+
+        .text1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .text2 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 600;
+        }
+
+        .text3 {
+            margin: 0;
+            width: 40vw;
+        }
+
+        .text4 {
+            border-bottom: 2px solid #03844c;
+            width: fit-content;
+            margin-top: 5vh;
+            padding-bottom: 4px;
+            padding-right: 10px;
+
+        }
+
+        .random {
+            position: absolute;
+            font-weight: 800;
+            font-size: 100px;
+            line-height: 14vh;
+            top: -7.5vh;
+            z-index: 1;
+            left: -5vw;
+            color: rgba(118, 229, 181, 0.155);
+        }
+
+        .links {
+            display: flex;
+            gap: 2vw;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .grad-mob {
+            display: none;
+        }
+    }
+
+    .right {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+
+        .rightimg {
+            position: relative;
+        }
+
+        .robinson {
+            position: absolute;
+            bottom: -5vh;
+            display: flex;
+            gap: 2vw;
+            right: -3vw;
+            height: 10vh;
+        }
+    }
+}
+
+@media screen and (max-width: 1080px) {
+    .home {
+        flex-direction: column;
+
+        .left {
+            width: 90vw;
+            margin-bottom: 10vh;
+
+
+            .text3 {
+                width: 100%;
+            }
+
+            .text4 {
+                margin-bottom: 10vh;
+            }
+
+            .links {
+                gap: 4vw;
+            }
+
+            .random {
+                font-size: 50px;
+                top: -10vh;
+                left: -5vw;
+                line-height: 10vh;
+            }
+
+            .grad-mob {
+                display: block;
+                width: 100vh;
+                height: 100vh;
+                background-image: radial-gradient(#003e24b6, #0000007b, transparent);
+                position: absolute;
+                border-radius: 50%;
+                z-index: -100;
+                top: -60vw;
+                left: -80vw;
+            }
+
+        }
+    }
+}

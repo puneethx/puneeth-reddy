@@ -20,9 +20,9 @@ const mainApp = () => {
                             element={<React.Fragment>
                                 <Home />
                                 <Projects/>
-                                <About />
                                 <Skills />
                                 <Achievements/>
+                                <About />
                                 <Contact/>
                             </React.Fragment>} />
                     </Routes>

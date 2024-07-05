@@ -5,12 +5,9 @@ const about = () => {
   return (
     <div className='about'>
         <h2>About</h2>
-        <p>Hello! I am Shraddha vasudev jakate, a Computer Science frosh at VIT-AP, Class of '25. 
-            Curiosity drives me, and technology ignites my passion. As the VTalks Lead for the CSI VITAP Chapter, I'm dedicated to fostering a community where ideas converge and innovation flourishes.</p>
-            <p>My journey in Computer Science began with a fascination for problem-solving and an insatiable appetite for learning. Through coursework and hands-on projects, I've dived into the world of algorithms, data structures, and software development, constantly seeking to refine my skills and broaden my horizons.</p>
-            <p>Beyond the classroom, I thrive on connecting with fellow enthusiasts, professionals, and thought leaders. I believe that collaboration is the key to unlocking new possibilities. Whether it's discussing the latest advancements in technology or exploring the intersections of AI and ethics, I'm always eager to engage in meaningful conversations that challenge perspectives and inspire growth.</p>
-            <p>As I embark on this exciting academic journey, I'm committed to leveraging my role as VTalks Lead to create a platform for knowledge-sharing and innovation. Together, let's explore the frontiers of technology, connect ideas, and leave an indelible mark on the world of Computer Science.</p>
-            <p>I'm open to connecting with fellow students, mentors, and professionals who share my passion and vision. Feel free to reach out, and let's embark on this inspiring journey together!"</p>
+        <p className='body'>Hi there! I'm Puneeth Reddy.
+          I'm a passionate computer science student at VIT-AP University, currently working towards my B.Tech degree. My ultimate goal is to become a skilled Web Developer, and I'm already actively pursuing this dream by immersing myself in various projects. I've gained experience in exciting areas like Deep Learning, Computer Vision, NLP and Web development. This diverse exposure has equipped me with a strong foundation in various programming languages and frameworks, allowing me to approach problems from different angles and find innovative solutions. 
+          I'm constantly eager to learn and grow, and I'm excited to see what the future holds in the ever-evolving world of technology. If you're looking for a dedicated and enthusiastic individual with a passion for Machine Learning and Web Development, feel free to explore my portfolio and get in touch!</p>
     </div>
   )
 }

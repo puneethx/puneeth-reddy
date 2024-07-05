@@ -9,9 +9,9 @@ const Header = () => {
     <div className='Header'>
       <div className="navbar">
         <ul>
-          <li><SLink smooth to="/#skills">SKILLS</SLink></li>
           <li><SLink smooth to="/#projects">PROJECTS</SLink></li>
-          <li><SLink smooth to="/#achievements">ACHIEVEMENTS</SLink></li>
+          <li><SLink smooth to="/#skills">HACKATHONS</SLink></li>
+          <li><SLink smooth to="/#achievements">EXPERIENCE</SLink></li>
           <li><SLink smooth to="/#contact">CONTACT</SLink></li>
         </ul>
       </div>

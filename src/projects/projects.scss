@@ -1,7 +1,6 @@
 .projects {
-    margin: 20vh 10vw 0vh 7.5vw;
+    margin: 30vh 10vw 0vh 7.5vw;
     line-height: 5vh;
-
     h2 {
         font-size: 36px;
         font-weight: 600;
@@ -16,7 +15,7 @@
         .testflex{
             display: flex;
             flex-wrap: wrap;
-            column-gap: 4vw;
+            gap: 4vw;
             .project {
                 border-radius: 6px;
                 padding-bottom: 1vh;
@@ -33,7 +32,8 @@
         
                     .head {
                         font-weight: bold;
-                        color: #e1efe2;
+                        // color: #e1efe2;
+                        color: #3fa349;
                         display: flex;
                         justify-content: flex-start;
                         align-items: flex-end;

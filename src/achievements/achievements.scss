@@ -10,10 +10,11 @@
     }
     .experience{
         display: flex;
-        margin-top: 10vh;
+        margin-left: 2vw;
+        margin-top: 7.5vh;
         .left{
             flex: 2;
-            padding-right: 7.5vw;
+            padding-right: 5.5vw;
             .row{
                 margin-bottom: 3vh;
                 .toprow{
@@ -23,7 +24,7 @@
                     font-weight: 500;
                 }
                 .bottomrow{
-                    font-size: 14px;
+                    font-size: 13px;
                     width: 40vw;
                     line-height: normal;
                 }
@@ -34,6 +35,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+            gap: 10vh;
+            img{
+                width: 20vw;
+            }
+            .rightex{
+                width: 12vw;
+                background-color: rgb(112, 112, 112);
+                border-radius: 7px;
+            }
         }
     }
 }

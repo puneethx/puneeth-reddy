@@ -1,12 +1,14 @@
 .about{
-    margin: 30vh 10vw 0vh 7.5vw;
+    margin: 10vh 10vw 0vh 7.5vw;
     line-height: 5vh;
     position: relative;
     h2{
         font-size: 36px;
         font-weight: 600;
     }
-    p{
+    .body{
         margin-top: 2.5vh;
+        margin-left: 2vw;
+        text-align: justify;
     }
 }

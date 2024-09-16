@@ -1,6 +1,6 @@
 import React from 'react'
 import "./Home.scss"
-import Shraddha from "../assets/shraddha.svg"
+import Puneeth from "../assets/puneeth.png"
 import instagram from "../assets/instagram.svg"
 import twitter from "../assets/twitter.svg"
 import linkedin from "../assets/linkedin.svg"
@@ -8,17 +8,15 @@ import github from "../assets/github.svg"
 import s1 from "../assets/s1.svg"
 import s2 from "../assets/s2.svg"
 
+
+
 const Home = () => {
     return (
         <div className='home'>
             <div className="left">
                 <p className='text1'>Hello it's me,</p>
                 <p className='text2'>Puneeth Reddy.</p>
-                <p className='text3'>An enthusiastic product designer currently 
-                    shaping the future of software development by
-                    designing smooth user-interfaces that promote 
-                    user interaction with information and data.
-                    While traveling around the world.</p>
+                <p className='text3'>An enthusiastic Web Developer with a proven track record of building and deploying high-performing websites. Passionate about web development, eager to innovate and create impactful solutions.</p>
                 <p className='text4'>SCROLL FOR MORE</p>
                 <div className='random'>
                     <p>Web <br />Developer</p>
@@ -41,7 +39,7 @@ const Home = () => {
             </div>
             <div className="right">
                 <div className="rightimg">
-                <img src={Shraddha} alt="img" />
+                <img src={Puneeth} alt="img" />
                 <div className="robinson">
                     <img src={s1} alt="s1" />
                     <img src={s2} alt="s2" />

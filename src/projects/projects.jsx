@@ -9,6 +9,7 @@ import Pro5 from "../assets/pro5.png";
 import Pro6 from "../assets/pro6.png";
 import Pro7 from "../assets/pro7.png";
 import Pro8 from "../assets/pro8.png";
+import Pro9 from "../assets/pro9.png";
 
 const projects = () => {
   return (
@@ -16,13 +17,31 @@ const projects = () => {
       <h2>Projects</h2>
       <div className="proflex">
         <div className="testflex">
+        <div className="project">
+            <a href="https://github.com/puneethx/Tripla" target='_blank'>
+              <div className="pro">
+                <div className="head"><span>Tripla<span className='upright'><FiArrowUpRight /></span></span></div>
+                <span className="body">I created a travel planner website where users can explore trip packages, city attractions, and special offers. It includes eco-friendly services like carpooling, bike-sharing, and a carbon footprint calculator, designed with a clean UI/UX for a smooth user experience.
+                </span>
+                <div className="preview">
+                  <img src={Pro9} alt="" />
+                </div>
+                <div className="tech">
+                  <div className="wrap"><span>React</span></div>
+                  <div className="wrap"><span>CSS</span></div>
+                  <div className="wrap"><span>Javascript</span></div>
+                  <div className="wrap"><span>Vercel</span></div>
+                </div>
+              </div>
+            </a>
+          </div>
           <div className="project">
             <a href="https://github.com/puneethx/kkhomeneeds-V2" target='_blank'>
               <div className="pro">
                 <div className="head"><span>KK Home Needs<span className='upright'><FiArrowUpRight /></span></span></div>
                 <span className="body">I developed a React js application for a home needs store, enhancing
                   user experience with intuitive UI/UX and seamless navigation.
-                  Integrated product catalog, shopping cart, and streamlined checkout
+                  Integrated product catalog, shopping cart, and wishlist and streamlined checkout
                   process optimizing customer interactions.
                 </span>
                 <div className="preview">
@@ -62,7 +81,7 @@ const projects = () => {
                 <div className="head"><span>ATG World<span className='upright'><FiArrowUpRight /></span></span></div>
                 <span className="body">I redesigned and built a website for Across The Globe company, with featuring
                   good user experience and UI/UX.
-                  Across The Globe is an interest based social network platform where
+                  It is an interest based social network platform where
                   people Across The Globe connect, collaborate, learn and inspire each other.
                 </span>
                 <div className="preview">

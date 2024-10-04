@@ -3,7 +3,7 @@ import "./about.scss"
 
 const about = () => {
   return (
-    <div className='about'>
+    <div className='about' id='about'>
         <h2>About</h2>
         <p className='body'>Hi there! I'm Puneeth Reddy.
           I'm a passionate computer science student at VIT-AP University, currently working towards my B.Tech degree. My ultimate goal is to become a skilled Web Developer, and I'm already actively pursuing this dream by immersing myself in various projects. I've gained experience in exciting areas like Deep Learning, Computer Vision, NLP and Web development. This diverse exposure has equipped me with a strong foundation in various programming languages and frameworks, allowing me to approach problems from different angles and find innovative solutions. 

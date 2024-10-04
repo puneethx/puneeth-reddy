@@ -40,10 +40,15 @@
         .text4 {
             border-bottom: 2px solid #03844c;
             width: fit-content;
+            color: white;
             margin-top: 5vh;
             padding-bottom: 4px;
             padding-right: 10px;
-
+            z-index: 100;
+            cursor: pointer;
+        }
+        .Slink4{
+            color: white;
         }
 
         .random {

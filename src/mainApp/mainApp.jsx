@@ -19,11 +19,13 @@ const mainApp = () => {
                         <Route path="/"
                             element={<React.Fragment>
                                 <Home />
-                                <Projects/>
-                                <Skills />
-                                <Achievements/>
-                                <About />
-                                <Contact/>
+                                <div className='margin'>
+                                    <Projects />
+                                    <Skills />
+                                    <Achievements />
+                                    <About />
+                                    <Contact />
+                                </div>
                             </React.Fragment>} />
                     </Routes>
                 </div>

@@ -1,5 +1,6 @@
 .projects {
-    margin: 20vh 10vw 0vh 7.5vw;
+    margin-top: 30vh;
+    width: 100%;
     line-height: 5vh;
 
     h2 {
@@ -125,7 +126,8 @@
 
     @media screen and (max-width: 1080px) {
         .projects {
-            margin: 20vh 10vw 0vh 7.5vw;
+            margin-top: 20vh;
+    width: 100%;
             line-height: 5vh;
 
             h2 {
@@ -251,7 +253,8 @@
 
 @media screen and (max-width: 1201px) {
     .projects {
-        margin: 20vh 10vw 0vh 7.5vw;
+        margin-top: 20vh;
+    width: 100%;
         line-height: 5vh;
 
         h2 {

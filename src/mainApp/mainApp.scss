@@ -1,6 +1,13 @@
 .main {
   position: relative;
   width: 100%;
+  overflow: hidden;
+  max-width: 100vw;
+  .mainApp{
+    .margin{
+      margin: 0vh 7.5vw 0vh 7.5vw;
+    }
+  }
   &::before {
     --size: 0;
     content: '';

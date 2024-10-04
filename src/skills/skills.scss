@@ -1,6 +1,6 @@
 .skills {
-    margin: 20vh 10vw 0vh 7.5vw;
-    line-height: 5vh;
+    margin-top: 20vh;
+    width: 100%;
 
     h2 {
         font-size: 36px;
@@ -126,7 +126,8 @@
 
     @media screen and (max-width: 1080px) {
         .projects {
-            margin: 20vh 10vw 0vh 7.5vw;
+            margin-top: 20vh;
+            width: 100%;
             line-height: 5vh;
 
             h2 {
@@ -252,7 +253,8 @@
 
 @media screen and (max-width: 1201px) {
     .skills {
-        margin: 20vh 10vw 0vh 7.5vw;
+        margin-top: 20vh;
+        width: 100%;
         line-height: 5vh;
 
         h2 {

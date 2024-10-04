@@ -17,7 +17,7 @@ const projects = () => {
       <h2>Projects</h2>
       <div className="proflex">
         <div className="testflex">
-        <div className="project">
+          <div className="project">
             <a href="https://github.com/puneethx/Tripla" target='_blank'>
               <div className="pro">
                 <div className="head"><span>Tripla<span className='upright'><FiArrowUpRight /></span></span></div>
@@ -176,8 +176,8 @@ const projects = () => {
               <div className="pro">
                 <div className="head"><span>Collabs<span className='upright'><FiArrowUpRight /></span></span></div>
                 <span className="body">Developed a prototype web-based application named COLLABS for task assignment and
-management within teams. It features automated task allocation, leave management, and efficient
-team communication, ensuring optimal task distribution 
+                  management within teams. It features automated task allocation, leave management, and efficient
+                  team communication, ensuring optimal task distribution
                 </span>
                 <div className="preview">
                   <img src={Pro8} alt="" />

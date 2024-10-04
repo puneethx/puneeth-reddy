@@ -2,7 +2,7 @@
     display: flex;
     margin-top: 7.5vh;
     position: relative;
-    width: 99.25vw;
+    width: 100%;
 
     .left {
         flex: 1;
@@ -40,7 +40,6 @@
         .text4 {
             border-bottom: 2px solid #03844c;
             width: fit-content;
-            color: white;
             margin-top: 5vh;
             padding-bottom: 4px;
             padding-right: 10px;
@@ -85,11 +84,11 @@
 
         .robinson {
             position: absolute;
-            bottom: -5vh;
+            bottom: -3vh;
             display: flex;
-            gap: 2vw;
-            left: 3vw;
-            height: 10vh;
+            gap: 1vw;
+            right: -2vw;
+            height: 7.5vh;
         }
     }
 }
@@ -97,7 +96,7 @@
 @media screen and (max-width: 1080px) {
     .home {
         flex-direction: column;
-
+        width: 90vw;
         .left {
             width: 90vw;
             margin-bottom: 10vh;

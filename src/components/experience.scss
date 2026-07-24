@@ -1,0 +1,89 @@
+.exp-sec {
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 40px;
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  .tabs {
+    position: relative;
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    @media (max-width: 720px) {
+      flex-direction: row;
+      overflow-x: auto;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      .marker { display: none; }
+    }
+    .tab {
+      padding: 16px 20px;
+      text-align: left;
+      color: var(--fg-mute);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      transition: all 0.3s;
+      height: 56px;
+      &.active { color: var(--accent); }
+      &:hover { color: var(--fg); background: rgba(255,255,255,0.02); }
+    }
+    .marker {
+      position: absolute;
+      left: -1px;
+      top: 0;
+      width: 2px;
+      height: 56px;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+  }
+  .details {
+    animation: fadeUp 0.5s ease;
+    .role {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      .at { color: var(--accent); }
+    }
+    .period {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--fg-mute);
+      margin-bottom: 20px;
+    }
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      li {
+        display: flex;
+        gap: 12px;
+        color: var(--fg-dim);
+        font-size: 15px;
+        line-height: 1.65;
+        .marker-dot { color: var(--accent); flex-shrink: 0; }
+      }
+    }
+    .tech-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      .ttag {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: rgba(201,100,66,0.1);
+        color: var(--accent-2);
+        border: 1px solid rgba(201,100,66,0.25);
+      }
+    }
+  }
+}

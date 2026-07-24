@@ -1,0 +1,103 @@
+.contact-sec {
+  .contact-hero {
+    text-align: center;
+    margin-bottom: 60px;
+    .pre {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    h3 {
+      font-size: clamp(36px, 5vw, 60px);
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      .grad {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-weight: 400;
+        display: inline-block;
+        padding: 0.05em 0.15em 0.15em 0.1em;
+        margin: 0 -0.05em;
+        line-height: 1.25;
+      }
+    }
+    p {
+      max-width: 620px;
+      margin: 0 auto 20px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--fg-dim);
+    }
+    .loc {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--fg-dim);
+    }
+  }
+  .rows {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    .row {
+      display: grid;
+      grid-template-columns: 60px 1fr 30px;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 24px;
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+      &:hover {
+        border-color: var(--accent);
+        background: rgba(201,100,66,0.06);
+        transform: translateX(8px);
+        .icon { background: var(--accent); color: #fff; }
+        .arrow { color: var(--accent); transform: translate(4px, -4px); }
+      }
+      .icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.04);
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+        color: var(--accent);
+        transition: all 0.3s;
+      }
+      .label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--fg-mute);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .value {
+        font-size: 15px;
+        color: var(--fg);
+      }
+      .arrow {
+        color: var(--fg-mute);
+        transition: all 0.3s;
+        font-size: 20px;
+      }
+    }
+  }
+}

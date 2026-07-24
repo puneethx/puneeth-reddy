@@ -1,0 +1,191 @@
+.throw-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none;
+  overflow: hidden;
+  perspective: 1200px;
+}
+
+// Faint flash at the origin (guy's hands, bottom-left)
+.throw-origin {
+  position: absolute;
+  left: 60px;
+  bottom: 60px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,100,66,0.7), transparent 70%);
+  filter: blur(6px);
+  animation: originPulse 0.6s ease-out forwards;
+}
+@keyframes originPulse {
+  0% { opacity: 0; transform: scale(0.4); }
+  40% { opacity: 1; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(2.6); }
+}
+
+// Each paper travels through 3 stages:
+//   0%      — start at bottom-left (behind guy's hand)
+//   35–50%  — huge, near-camera "zoom in your face"
+//   100%    — small, top-right (where browser download icon sits)
+.paper-fly {
+  position: absolute;
+  left: 60px;
+  bottom: 60px;
+  width: 120px;
+  height: 152px;
+  transform-style: preserve-3d;
+  transform: translate3d(0, 0, 0) scale(0.2) rotate(0);
+  opacity: 0;
+  animation: paperArc 2.4s cubic-bezier(0.55, 0, 0.4, 1) forwards;
+  animation-delay: var(--delay, 0s);
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 24px rgba(201, 100, 66, 0.35));
+  will-change: transform, opacity;
+}
+.paper-inner {
+  width: 100%;
+  height: 100%;
+  animation: paperSpin 2.4s cubic-bezier(0.55, 0, 0.4, 1) forwards;
+  animation-delay: var(--delay, 0s);
+  transform-style: preserve-3d;
+  svg { width: 100%; height: 100%; }
+}
+
+@keyframes paperArc {
+  /* Launch from the guy */
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.15) rotate(var(--rot-base));
+    opacity: 0;
+  }
+  5% { opacity: 1; }
+
+  /* Rise & swell — approach camera. dx-peak/dy-peak fan the stack out */
+  30% {
+    transform:
+      translate3d(calc(30vw + var(--dx-peak)), -55vh, 0)
+      scale(2.2)
+      rotate(calc(var(--rot-base) + 90deg));
+    opacity: 1;
+  }
+
+  /* Peak zoom — huge, right in your face */
+  45% {
+    transform:
+      translate3d(calc(35vw + var(--dx-peak) * 0.5), -60vh, 0)
+      scale(3.6)
+      rotate(calc(var(--rot-base) + 180deg));
+    opacity: 1;
+  }
+
+  /* Recede and curve toward top-right download tray */
+  75% {
+    transform:
+      translate3d(70vw, -80vh, 0)
+      scale(1.1)
+      rotate(calc(var(--rot-base) + 320deg));
+    opacity: 1;
+  }
+  /* Land at top-right — the browser's download icon area */
+  100% {
+    transform:
+      translate3d(calc(100vw - 120px), -100vh, 0)
+      scale(0.15)
+      rotate(calc(var(--rot-base) + 420deg));
+    opacity: 0;
+  }
+}
+
+@keyframes paperSpin {
+  0% { transform: rotateY(0) rotateX(0); }
+  30% { transform: rotateY(180deg) rotateX(20deg); }
+  60% { transform: rotateY(360deg) rotateX(-10deg); }
+  100% { transform: rotateY(540deg) rotateX(0); }
+}
+
+/* Speed lines while the papers are close to the camera */
+.speed-lines {
+  position: absolute;
+  inset: 0;
+  animation: fadeInOut 1s ease forwards;
+  animation-delay: 0.4s;
+  opacity: 0;
+  span {
+    position: absolute;
+    top: calc(20% + var(--r) * 60%);
+    left: calc(var(--i) * 8.5%);
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(180deg, transparent, rgba(201,100,66,0.65), transparent);
+    transform: rotate(15deg);
+    animation: streak 0.6s ease-out forwards;
+    animation-delay: calc(0.4s + var(--i) * 0.03s);
+    opacity: 0;
+  }
+}
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  40%, 70% { opacity: 1; }
+}
+@keyframes streak {
+  0% { transform: rotate(15deg) translateY(-200px) scaleY(0.4); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: rotate(15deg) translateY(500px) scaleY(1.4); opacity: 0; }
+}
+
+/* Sparkle burst at top-right when papers land */
+.landing-fx {
+  position: absolute;
+  top: 12px;
+  right: 80px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+  filter: blur(2px);
+  opacity: 0;
+  animation: landPop 0.6s ease-out forwards;
+  animation-delay: 1.9s;
+}
+@keyframes landPop {
+  0% { opacity: 0; transform: scale(0.2); }
+  50% { opacity: 1; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+
+/* Delivered toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line-strong);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
+  animation: toastIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+             toastOut 0.4s ease 2s forwards;
+  opacity: 0;
+  transform: translateY(-20px);
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 12px #4ade80;
+    animation: pulse-glow 1.4s ease-in-out infinite;
+  }
+}
+@keyframes toastIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(-20px); }
+}

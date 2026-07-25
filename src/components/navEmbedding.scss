@@ -1,0 +1,110 @@
+/* =============================================================
+ * NavEmbedding — 2D embedding-space nav (top-right, tucked next
+ * to the scrollbar).
+ * ============================================================ */
+
+/* Top-right, no chrome — pure floating viz.
+   ~200px keeps the section labels above each node readable. */
+.nav-emb {
+  position: fixed;
+  right: 8px;    /* hug the scrollbar */
+  top: 16px;
+  z-index: 110;
+  width: 180px;
+  pointer-events: auto;
+  font-family: var(--font-mono);
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+}
+
+/* Layout-only wrapper — no chrome */
+.ne-panel {
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.ne-canvas {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    /* Subtle drop-shadow so the viz reads clearly against the site bg */
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+  }
+}
+
+.ne-edge {
+  stroke: rgba(232, 180, 140, 0.65);
+  stroke-linecap: round;
+  transition: opacity 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease;
+  &.hot {
+    stroke: var(--accent);
+    filter: drop-shadow(0 0 1.5px rgba(201, 100, 66, 0.9));
+  }
+}
+
+.ne-node {
+  fill: rgba(232, 180, 140, 0.85);
+  stroke: rgba(10, 10, 11, 0.9);
+  stroke-width: 0.4;
+  cursor: pointer;
+  transition:
+    fill 0.25s ease,
+    stroke 0.25s ease,
+    r 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.25s ease;
+  filter: drop-shadow(0 0 2px rgba(201, 100, 66, 0.35));
+  &:hover, &.hover {
+    fill: var(--fg);
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+  }
+  &.active {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 3px rgba(201, 100, 66, 0.9))
+            drop-shadow(0 0 6px rgba(201, 100, 66, 0.55));
+  }
+}
+
+.ne-query {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 3px rgba(201, 100, 66, 0.95))
+          drop-shadow(0 0 8px rgba(201, 100, 66, 0.55));
+}
+
+/* Whole node+label group — click anywhere in it to navigate. */
+.ne-hit {
+  cursor: pointer;
+  outline: none;
+  &:focus-visible rect { stroke: var(--accent); stroke-width: 0.5; }
+}
+
+.ne-label {
+  font-family: var(--font-mono);
+  font-size: 5px;
+  fill: var(--fg-mute);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* Labels are inside .ne-hit so they participate in the click, but
+     individually don't need their own hover styling from the SVG. */
+  pointer-events: none;
+  transition: fill 0.25s ease, font-weight 0.25s ease;
+  /* Text outline so labels stay readable over the page background */
+  paint-order: stroke fill;
+  stroke: rgba(10, 10, 11, 0.85);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+  &.active { fill: var(--accent); font-weight: 700; }
+  &.hover  { fill: var(--fg); }
+}

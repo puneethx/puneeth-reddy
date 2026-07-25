@@ -5,13 +5,11 @@
     gap: 20px;
   }
   .hack-card {
-    display: flex;
-    flex-direction: column;
     background: var(--bg-elev);
     border: 1px solid var(--line);
     border-radius: 20px;
     overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.22,1,0.36,1);
+    transition: border-color 0.5s ease, background 0.5s ease;
     position: relative;
     &::after {
       content: '';
@@ -27,13 +25,22 @@
       opacity: 0;
       transition: opacity 0.4s;
       pointer-events: none;
+      z-index: 2;
     }
     &:hover {
-      transform: translateY(-8px);
+      /* No upward translate — WebGL specular edge is the affordance. */
       &::after { opacity: 1; }
       .thumb img { transform: scale(1.08); }
-      .up { color: var(--accent); transform: translate(3px, -3px); }
+      .up { color: var(--accent); }
       .ribbon { background: var(--accent); color: #fff; }
+    }
+    > .specular-card__inner {
+      display: flex;
+      flex-direction: column;
+      border-radius: inherit;
+      overflow: hidden;
+      flex: 1;
+      height: 100%;
     }
     .thumb {
       aspect-ratio: 16 / 10;

@@ -1,6 +1,6 @@
 main {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 section {
@@ -47,3 +47,68 @@ section {
 .reveal.delay-2 { transition-delay: 0.2s; }
 .reveal.delay-3 { transition-delay: 0.3s; }
 .reveal.delay-4 { transition-delay: 0.4s; }
+
+/* =============================================================
+ * Floating Folder (replaces the old Pet avatar) — bottom-left,
+ * three papers each let the user grab the resume. */
+.folder-wrap {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 200;
+  transform-origin: bottom left;
+  animation: folderIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.55));
+
+  /* When the resume-throw animation is running, briefly shake the folder */
+  &.is-throwing { animation: folderShake 0.55s ease-out; }
+
+  /* Even smaller on tablets/phones. We scale the whole wrap via CSS so the
+   * folder shrinks proportionally without touching the JS `size` prop. */
+  @media (max-width: 1024px) {
+    left: 16px;
+    bottom: 16px;
+    transform: scale(0.75);
+  }
+  @media (max-width: 480px) {
+    left: 10px;
+    bottom: 10px;
+    transform: scale(0.65);
+  }
+}
+@keyframes folderIn {
+  0%   { opacity: 0; transform: translateY(40px) scale(0.6); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes folderShake {
+  0%   { transform: rotate(0); }
+  25%  { transform: rotate(-6deg); }
+  55%  { transform: rotate(6deg) translateY(-3px); }
+  100% { transform: rotate(0); }
+}
+
+/* Paper content — small "Resume" chip inside each paper.
+ * Clicking anywhere inside the paper triggers onPaperClick.
+ * Scaled up a bit since the outer folder is now size 0.8. */
+.folder-paper-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a0e08;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 4px;
+  text-align: center;
+  transition: color 0.2s;
+  svg { font-size: 14px; color: var(--accent); flex-shrink: 0; }
+  span { white-space: nowrap; }
+}
+.folder.open .paper:hover .folder-paper-content {
+  color: var(--accent);
+}

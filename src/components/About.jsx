@@ -1,3 +1,4 @@
+import StackCanvas from './StackCanvas.jsx'
 import './about.scss'
 
 const stats = [
@@ -5,13 +6,6 @@ const stats = [
   { n: '4×', l: 'Hackathon podiums' },
   { n: '1', l: 'Global conference showcase' },
   { n: '9+', l: 'End-to-end projects' },
-]
-
-const stack = [
-  { group: 'Agentic AI', items: ['LangChain', 'LangGraph', 'Hybrid RAG', 'BM25 + Cosine', 'Multi-agent orchestration', 'Prompt engineering', 'MCP'] },
-  { group: 'ML / Computer Vision', items: ['PyTorch', 'YOLOv8', 'C3D', 'SlowFast', 'Bi-LSTM', 'Tesseract OCR'] },
-  { group: 'Backend & APIs', items: ['FastAPI', 'REST', 'Flask', 'Python', 'Java', 'CAPM'] },
-  { group: 'Frontend & 3D', items: ['React', 'Next.js', 'React Three Fiber', 'Svelte', 'Streamlit', 'SCSS'] },
 ]
 
 export default function About() {
@@ -70,17 +64,8 @@ export default function About() {
 
         <div className="stack">
           <h3 className="reveal">Tech Stack</h3>
-          <div className="stack-grid">
-            {stack.map((g, gi) => (
-              <div className="stack-col reveal" key={g.group} style={{ transitionDelay: `${gi * 0.08}s` }}>
-                <div className="stack-title">{g.group}</div>
-                <div className="chips">
-                  {g.items.map((t) => (
-                    <span key={t} className="chip">{t}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="reveal delay-1">
+            <StackCanvas />
           </div>
         </div>
       </div>

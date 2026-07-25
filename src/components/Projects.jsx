@@ -1,5 +1,6 @@
 import { FiArrowUpRight, FiStar } from 'react-icons/fi'
 import { WarehouseIllustration, CopilotIllustration, DakshaIllustration } from './Illustrations.jsx'
+import HorizontalCardStack from './HorizontalCardStack.jsx'
 import Pro1 from '../assets/pro1.png'
 import Pro2 from '../assets/pro2.png'
 import Pro3 from '../assets/pro3.png'
@@ -152,34 +153,21 @@ export default function Projects() {
         </div>
 
         <h3 className="other-title reveal">Other things I've built</h3>
-        <div className="grid">
-          {others.map((p, i) => (
-            <a
-              key={p.title}
-              href={p.href}
-              target="_blank"
-              rel="noreferrer"
-              className="card reveal"
-              data-glow
-              style={{ transitionDelay: `${i * 0.05}s` }}
-            >
-              <div className="thumb">
-                <img src={p.img} alt={p.title} />
-                <div className="scan" />
-              </div>
-              <div className="body">
-                <div className="row">
-                  <h4>{p.title}</h4>
-                  <FiArrowUpRight className="up" />
-                </div>
-                <div className="tagline">{p.tagline}</div>
-                <p>{p.body}</p>
-                <div className="tech">
-                  {p.tech.map((t) => <span key={t}>{t}</span>)}
-                </div>
-              </div>
-            </a>
-          ))}
+
+        {/* One layout everywhere — the HorizontalCardStack scales down to
+            mobile via its own responsive SCSS. */}
+        <div className="reveal">
+          <HorizontalCardStack
+            items={others.map((p) => ({
+              title: p.title,
+              tagline: p.tagline,
+              body: p.body,
+              img: p.img,
+              href: p.href,
+              tech: p.tech,
+              tag: p.tech?.[0],
+            }))}
+          />
         </div>
       </div>
     </section>

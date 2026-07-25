@@ -1,0 +1,121 @@
+/* =============================================================
+ * FloatingDock — no background container. Icons hover free.
+ * ============================================================ */
+
+.fdock {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+/* Lock the desktop dock to the maximum icon height (62px) so it doesn't
+ * push the surrounding layout as icons grow toward the cursor. The extra
+ * space is filled by the flex-end alignment above, keeping icons anchored
+ * to a stable baseline. */
+.fdock--desktop {
+  display: none;
+  height: 62px;
+  min-height: 62px;
+}
+.fdock--mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+/* Reset for the anchor/button wrapper so a <button> looks identical to <a> */
+.fdock-anchor {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font: inherit;
+}
+.fdock-anchor--btn { -webkit-tap-highlight-color: transparent; }
+
+/* Icon chip — transparent, subtle border only, no fill */
+.fdock-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+  &:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+/* Accent icon — orange from the start (border + glyph). Slight glow on hover. */
+.fdock-icon--accent {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(201, 100, 66, 0.25),
+              0 6px 18px -8px rgba(201, 100, 66, 0.55);
+  &:hover {
+    color: #ffd6bd;
+    border-color: #ffd6bd;
+    box-shadow: 0 0 0 1px rgba(232, 180, 140, 0.35),
+                0 10px 24px -8px rgba(201, 100, 66, 0.7);
+  }
+}
+.fdock-icon--static {
+  width: 40px;
+  height: 40px;
+}
+
+/* Inner glyph — grows with cursor distance on desktop */
+.fdock-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+.fdock-icon--static .fdock-glyph {
+  width: 18px;
+  height: 18px;
+}
+
+/* Tooltip pip that appears above each icon on hover */
+.fdock-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(22, 22, 26, 0.9);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Show desktop dock on wider viewports, hide mobile ---- */
+@media (min-width: 1025px) {
+  .fdock--desktop { display: flex; }
+  .fdock--mobile  { display: none; }
+}

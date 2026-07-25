@@ -30,7 +30,7 @@
   transform-origin: center bottom;
   transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
   &:hover {
-    transform: scale(1.08) translateY(-3px);
+    /* No upward lift — pointer glow/halo carries the affordance. */
     .halo { opacity: 1; transform: scale(1.25); }
     .p1 { transform: rotate(-24deg) translate(-8px, -2px); }
     .p2 { transform: rotate(-4deg) translate(4px, -6px); }
@@ -224,20 +224,27 @@
     padding-right: 20px;
     animation: fadeUp 0.4s ease;
   }
-  .grab {
+  .specular-button.grab {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
-    border-radius: 999px;
-    background: var(--gradient);
-    color: #1a0e08;
-    font-weight: 600;
     font-size: 13px;
+    font-weight: 600;
     width: 100%;
     justify-content: center;
-    transition: all 0.3s;
-    &:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -8px var(--accent-glow); }
+    color: #1a0e08 !important;
+    background: var(--gradient) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 10px 24px -6px rgba(201, 100, 66, 0.45) !important;
+    .specular-button__label {
+      gap: 8px;
+      color: #1a0e08;
+      position: relative;
+      z-index: 3;
+    }
+    svg { position: relative; z-index: 3; color: #1a0e08; }
   }
   .tail {
     position: absolute;

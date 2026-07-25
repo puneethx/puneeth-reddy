@@ -1,0 +1,595 @@
+/* =============================================================
+ * StackCanvas — macOS-window styled draggable node canvas.
+ * Smaller footprint, category tabs on top, no traveling pulses.
+ * ============================================================ */
+
+.stack-canvas-wrap {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 40px;
+  align-items: center;
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+/* ==================== LEFT INFO PANEL ==================== */
+.scv-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.scv-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(201, 100, 66, 0.1);
+  border: 1px solid rgba(201, 100, 66, 0.4);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--accent-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  .scv-info-badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+}
+
+.scv-info-title {
+  font-family: var(--font-sans);
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  margin: 0;
+  em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* "Try it" tip card */
+.scv-info-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(201, 100, 66, 0.4);
+  background: rgba(201, 100, 66, 0.06);
+}
+.scv-info-tip-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(201, 100, 66, 0.18);
+  color: var(--accent);
+}
+.scv-info-tip-body { min-width: 0; }
+.scv-info-tip-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.scv-info-tip-text {
+  font-size: 13px;
+  color: var(--fg);
+  line-height: 1.4;
+}
+
+
+/* ==================== MAC WINDOW SHELL ==================== */
+.mac-window {
+  width: 100%;
+  max-width: 880px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2a2a34;
+  background: #0e0d12;
+  box-shadow:
+    0 30px 60px -18px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  min-width: 0;
+}
+
+/* ---- Title bar ---- */
+.mac-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #1e1d24 0%, #16151b 100%);
+  border-bottom: 1px solid #2a2a34;
+}
+.mac-traffic {
+  display: flex;
+  gap: 6px;
+}
+.mac-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: filter 0.2s;
+  &.red    { background: #ff5f57; }
+  &.yellow { background: #febc2e; }
+  &.green  { background: #28c840; }
+}
+.mac-titlebar:hover .mac-dot { filter: brightness(1.15); }
+.mac-title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #6b6b74;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+/* Balances the traffic-lights width on the left so the title stays centered */
+.mac-titlebar-spacer {
+  width: 52px;
+  flex-shrink: 0;
+}
+
+/* ---- Body: sidebar + canvas ---- */
+.mac-body {
+  display: flex;
+  align-items: stretch;
+}
+
+/* ---- Left vertical category sidebar ---- */
+.mac-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 12px 10px;
+  background: #131218;
+  border-right: 1px solid #22222a;
+  min-width: 148px;
+  flex-shrink: 0;
+}
+.mac-tab {
+  --tc: #c96442;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg-dim);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.25s;
+  &:hover, &.active {
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--tc);
+    transform: translateX(2px);
+  }
+}
+.mac-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tc);
+  box-shadow: 0 0 8px var(--tc);
+  flex-shrink: 0;
+}
+.mac-tab-label { flex: 1; }
+
+/* ==================== CANVAS ==================== */
+.stack-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  aspect-ratio: 800 / 400;
+  background:
+    radial-gradient(900px 300px at 30% 25%, rgba(201, 100, 66, 0.10), transparent 60%),
+    radial-gradient(600px 400px at 80% 90%, rgba(232, 180, 140, 0.05), transparent 60%),
+    linear-gradient(180deg, #0e0d12 0%, #0a0a0b 100%);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  &.dragging { cursor: grabbing; }
+}
+
+/* Dot-grid */
+.scv-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Wires (static, no pulse) */
+.scv-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+/* Wire shadow — thicker, blurred, offset slightly down to fake a cast */
+.scv-edge-shadow {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.65);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: blur(3px);
+  transform: translateY(2px);
+  opacity: 0.55;
+  transition: opacity 0.25s;
+  &.dim { opacity: 0.08; }
+  &.hot { opacity: 0.75; }
+}
+/* Wire body — 2-tone with a bright core */
+.scv-edge-line {
+  fill: none;
+  stroke: rgba(232, 180, 140, 0.35);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: stroke 0.25s, stroke-width 0.25s, opacity 0.25s, filter 0.25s;
+  &.hot {
+    stroke: var(--accent);
+    stroke-width: 2.4;
+    filter: drop-shadow(0 0 5px rgba(201, 100, 66, 0.7))
+            drop-shadow(0 0 12px rgba(201, 100, 66, 0.35));
+  }
+  &.dim {
+    opacity: 0.14;
+  }
+}
+
+/* Node layer */
+.scv-nodes-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Individual node */
+.scv-node {
+  --nc: #c96442;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(15, 15, 20, 0.94);
+  border: 1.4px solid var(--nc);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: grab;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.55);
+  transition:
+    box-shadow 0.3s,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s,
+    background 0.25s;
+  z-index: 2;
+
+  &:active { cursor: grabbing; }
+
+  &.dragging {
+    transform: translate(-50%, -50%) scale(1.06);
+    box-shadow:
+      0 12px 28px -6px rgba(201, 100, 66, 0.55),
+      0 0 0 3px rgba(201, 100, 66, 0.15);
+    z-index: 4;
+    transition: none;
+  }
+
+  /* Hot state — glowing highlight */
+  &.hot:not(.dragging) {
+    transform: translate(-50%, -50%) scale(1.08);
+    background: var(--nc);
+    color: #1a0e08;
+    z-index: 3;
+    box-shadow:
+      0 0 0 3px rgba(201, 100, 66, 0.22),
+      0 0 24px var(--nc),
+      0 12px 30px -6px rgba(0, 0, 0, 0.6);
+    .scv-node-dot {
+      background: #1a0e08;
+      box-shadow: none;
+      animation: none;
+    }
+  }
+
+  /* Dimmed state */
+  &.dim {
+    opacity: 0.22;
+    filter: saturate(0.5);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+/* Inner pulse dot */
+.scv-node-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nc);
+  box-shadow: 0 0 6px var(--nc);
+  animation: scv-node-pulse 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes scv-node-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.4); opacity: 0.55; }
+}
+.scv-node-label { pointer-events: none; }
+
+/* Sizes */
+.scv-node--lg { font-size: 12.5px; padding: 8px 14px; }
+.scv-node--md { font-size: 11.5px; padding: 7px 12px; }
+.scv-node--sm { font-size: 10.5px; padding: 5px 10px; }
+.scv-node--sm .scv-node-dot { width: 6px; height: 6px; }
+
+/* ==================== COLLABORATOR CURSOR ==================== */
+/* A fake "Puneeth" cursor that swoops in from the right, drags your moved
+   node back into place, drops a sticky comment, and leaves. */
+.scv-collab {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  transform: translate(-2px, -2px);
+  /* No CSS position transitions — positions are set per-frame from JS
+     during travel/drag phases, and we let the leave phase glide via a
+     dedicated transition below. */
+}
+.scv-collab--leaving {
+  transition:
+    left 0.8s cubic-bezier(0.34, 0.1, 0.15, 1),
+    top  0.8s cubic-bezier(0.34, 0.1, 0.15, 1);
+}
+.scv-collab--grabbing .scv-collab-cursor {
+  transform: scale(0.92);
+}
+.scv-collab-cursor {
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+  transition: transform 0.15s;
+}
+.scv-collab-tag {
+  display: inline-block;
+  margin-top: -2px;
+  margin-left: 14px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #1a0e08;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  animation: collab-tag-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes collab-tag-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Sticky comment bubble ---- */
+.scv-collab-bubble {
+  position: absolute;
+  min-width: 220px;
+  max-width: 260px;
+  padding: 10px 12px 11px;
+  background: rgba(20, 18, 24, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(201, 100, 66, 0.5);
+  border-radius: 10px;
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(201, 100, 66, 0.15);
+  animation: collab-bubble-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  /* Little pointing tail — a rotated square that acts as the pointer.
+     Which corner it lives on depends on bubble side + above/below. */
+  &::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: rgba(20, 18, 24, 0.98);
+    border-color: rgba(201, 100, 66, 0.5);
+    transform: rotate(45deg);
+  }
+
+  /* ---- Position variants ---- */
+  /* Right + Below (default): bubble hangs down-right of cursor */
+  &.scv-collab-bubble--right.below {
+    top: 30px;
+    left: 22px;
+    &::before {
+      top: -6px;
+      left: 16px;
+      border-left: 1px solid;
+      border-top:  1px solid;
+      border-color: rgba(201, 100, 66, 0.5);
+    }
+  }
+  /* Right + Above: bubble sits above-right, tail points down */
+  &.scv-collab-bubble--right.above {
+    bottom: 30px;
+    left: 22px;
+    &::before {
+      bottom: -6px;
+      left: 16px;
+      border-right:  1px solid;
+      border-bottom: 1px solid;
+      border-color: rgba(201, 100, 66, 0.5);
+    }
+  }
+  /* Left + Below: bubble hangs down-left of cursor */
+  &.scv-collab-bubble--left.below {
+    top: 30px;
+    right: 8px;
+    &::before {
+      top: -6px;
+      right: 16px;
+      border-left: 1px solid;
+      border-top:  1px solid;
+      border-color: rgba(201, 100, 66, 0.5);
+    }
+  }
+  /* Left + Above: bubble sits above-left, tail points down-right */
+  &.scv-collab-bubble--left.above {
+    bottom: 30px;
+    right: 8px;
+    &::before {
+      bottom: -6px;
+      right: 16px;
+      border-right:  1px solid;
+      border-bottom: 1px solid;
+      border-color: rgba(201, 100, 66, 0.5);
+    }
+  }
+}
+@keyframes collab-bubble-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.scv-collab-bubble-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.scv-collab-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: #1a0e08;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 10px;
+}
+.scv-collab-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0.02em;
+}
+.scv-collab-time {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--fg-mute);
+  letter-spacing: 0.03em;
+}
+.scv-collab-msg {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fg);
+  min-height: 1.45em; /* reserve height so bubble doesn't grow line-by-line */
+}
+/* Blinking caret at the end of the streamed message */
+.scv-collab-caret {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: -1px;
+  background: var(--accent-2);
+  border-radius: 1px;
+  animation: scv-caret-blink 0.8s steps(2, start) infinite;
+}
+@keyframes scv-caret-blink {
+  to { opacity: 0; }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 900px) {
+  /* Sidebar becomes a horizontal scroll strip at the top */
+  .mac-body {
+    flex-direction: column;
+  }
+  .mac-sidebar {
+    flex-direction: row;
+    gap: 4px;
+    padding: 8px 10px;
+    min-width: 0;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #22222a;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+  .mac-tab {
+    padding: 6px 10px;
+    font-size: 10px;
+    &:hover, &.active { transform: none; }
+  }
+  .stack-canvas {
+    aspect-ratio: 4 / 5;
+  }
+  .mac-title { font-size: 10.5px; }
+  .scv-node {
+    font-size: 10.5px;
+    padding: 5px 10px;
+  }
+  .scv-node--lg { font-size: 11.5px; padding: 6px 12px; }
+  .scv-node--sm { font-size: 9.5px;  padding: 4px 8px; }
+}

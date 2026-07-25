@@ -4,15 +4,12 @@
     gap: 24px;
   }
   .cert-card {
-    display: grid;
-    grid-template-columns: minmax(260px, 42%) 1fr;
-    gap: 0;
     background: var(--bg-elev);
     border: 1px solid var(--line);
     border-radius: 22px;
     overflow: hidden;
-    transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     position: relative;
+    transition: border-color 0.45s ease, background 0.45s ease;
     &::before {
       content: '';
       position: absolute;
@@ -21,20 +18,27 @@
       opacity: 0;
       transition: opacity 0.4s;
       pointer-events: none;
-      z-index: 1;
+      z-index: 2;
     }
     &:hover {
-      transform: translateY(-6px);
-      border-color: var(--accent);
-      box-shadow: 0 40px 80px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,100,66,0.35);
+      border-color: rgba(201,100,66,0.55);
+      background: linear-gradient(180deg, rgba(201,100,66,0.05), rgba(255,255,255,0));
       &::before { opacity: 1; }
       .cert-media img { transform: scale(1.04); }
-      .up { color: var(--accent); transform: translate(4px, -4px); }
+      .up { color: var(--accent); }
       .badge { background: var(--accent); color: #fff; }
       .halo { opacity: 1; }
     }
+    /* SpecularCard wraps content in .specular-card__inner — make it the grid */
+    > .specular-card__inner {
+      display: grid;
+      grid-template-columns: minmax(260px, 42%) 1fr;
+      gap: 0;
+      border-radius: inherit;
+      overflow: hidden;
+    }
     @media (max-width: 780px) {
-      grid-template-columns: 1fr;
+      > .specular-card__inner { grid-template-columns: 1fr; }
     }
   }
   .cert-media {

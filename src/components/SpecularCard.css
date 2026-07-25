@@ -1,0 +1,30 @@
+.specular-card {
+  --sc-radius: 22px;
+  position: relative;
+  display: block;
+  border-radius: var(--sc-radius);
+  color: inherit;
+  text-decoration: none;
+  isolation: isolate;
+  transition: none; /* No hover-lift — pointer-driven shine is the affordance */
+}
+
+.specular-card__fx {
+  position: absolute;
+  inset: -24px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.specular-card__fx canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.specular-card__inner {
+  position: relative;
+  display: block;
+  z-index: 1;
+  border-radius: inherit;
+}

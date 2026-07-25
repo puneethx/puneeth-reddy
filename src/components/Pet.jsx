@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { FiDownload, FiX } from 'react-icons/fi'
 import Puneeth from '../assets/puneeth.png'
+import SpecularButton from './SpecularButton.jsx'
 import './pet.scss'
 
 /**
@@ -55,9 +56,21 @@ export default function Pet({ onDownload, throwing }) {
         <div className="bubble">
           <button className="close" onClick={() => setOpen(false)}><FiX /></button>
           <div className="msg" key={msgIdx}>{messages[msgIdx]}</div>
-          <button className="grab" onClick={onDownload}>
+          <SpecularButton
+            size="sm"
+            radius={999}
+            className="grab"
+            lineColor="#ffe6d0"
+            baseColor="#c96442"
+            textColor="#f5f5f5"
+            intensity={1.2}
+            shineSize={14}
+            shineFade={45}
+            proximity={280}
+            onClick={onDownload}
+          >
             <FiDownload /> Download Resume
-          </button>
+          </SpecularButton>
           <div className="tail" />
         </div>
       )}

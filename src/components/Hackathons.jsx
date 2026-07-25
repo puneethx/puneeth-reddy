@@ -4,6 +4,7 @@ import Hack2 from '../assets/hack2.jpeg'
 import Hack3 from '../assets/hack3.jpeg'
 import Hack4 from '../assets/hack4.jpeg'
 import Vikas from '../assets/vikas.jpg'
+import SpecularCard from './SpecularCard.jsx'
 import './hackathons.scss'
 
 const items = [
@@ -66,13 +67,15 @@ export default function Hackathons() {
 
         <div className="hack-grid">
           {items.map((h, i) => (
-            <a
+            <SpecularCard
               key={h.event}
+              as="a"
               href={h.href}
               target="_blank"
               rel="noreferrer"
               className="hack-card reveal"
               style={{ transitionDelay: `${i * 0.1}s` }}
+              radius={20}
             >
               <div className="thumb">
                 <img src={h.img} alt={h.event} />
@@ -86,7 +89,7 @@ export default function Hackathons() {
                 <div className="where">{h.where}</div>
                 <p>{h.body}</p>
               </div>
-            </a>
+            </SpecularCard>
           ))}
         </div>
       </div>

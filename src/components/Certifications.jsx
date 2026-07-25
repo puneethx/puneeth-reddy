@@ -1,5 +1,6 @@
 import { FiArrowUpRight, FiAward } from 'react-icons/fi'
 import ClaudeCert from '../assets/claude_certified.jpg'
+import SpecularCard from './SpecularCard.jsx'
 import './certifications.scss'
 
 const items = [
@@ -27,13 +28,15 @@ export default function Certifications() {
 
         <div className="cert-grid">
           {items.map((c, i) => (
-            <a
+            <SpecularCard
               key={c.title}
+              as="a"
               href={c.href}
               target="_blank"
               rel="noreferrer"
               className="cert-card reveal"
               style={{ transitionDelay: `${i * 0.08}s` }}
+              radius={22}
               data-glow
             >
               <div className="cert-media">
@@ -62,7 +65,7 @@ export default function Certifications() {
                 </div>
                 <div className="linkedin-hint">Read the announcement on LinkedIn →</div>
               </div>
-            </a>
+            </SpecularCard>
           ))}
         </div>
       </div>

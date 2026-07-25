@@ -138,7 +138,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
+    transition: border-color 0.4s ease, background 0.4s ease;
     position: relative;
     &::before {
       content: '';
@@ -148,14 +148,14 @@
       opacity: 0;
       transition: opacity 0.4s;
       pointer-events: none;
+      z-index: 2;
     }
     &:hover {
-      transform: translateY(-6px);
+      /* No upward translate — border color + radial glow carry the affordance. */
       border-color: var(--line-strong);
-      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
       &::before { opacity: 1; }
       .thumb img { transform: scale(1.08); }
-      .up { transform: translate(3px, -3px); color: var(--accent); }
+      .up { color: var(--accent); }
     }
     .thumb {
       aspect-ratio: 16/10;

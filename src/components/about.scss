@@ -44,7 +44,6 @@
       transition: all 0.4s;
       cursor: default;
       &:hover {
-        transform: translateY(-4px);
         border-color: var(--accent);
         background: rgba(201,100,66,0.06);
         .n { color: var(--accent); }
@@ -103,7 +102,6 @@
     transition: all 0.4s;
     &:hover {
       border-color: var(--line-strong);
-      transform: translateY(-4px);
     }
     .stack-title {
       font-family: var(--font-mono);

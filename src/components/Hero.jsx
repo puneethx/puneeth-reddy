@@ -27,7 +27,7 @@ const roles = [
 export default function Hero({ onDownload }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)').matches : false
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)').matches : false
   )
   const tilt = useRef(null)
 
@@ -39,7 +39,7 @@ export default function Hero({ onDownload }) {
 
   // Watch viewport width
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1024px)')
+    const mq = window.matchMedia('(max-width: 1023px)')
     const onChange = (e) => setIsMobile(e.matches)
     setIsMobile(mq.matches)
     // eslint-disable-next-line no-console

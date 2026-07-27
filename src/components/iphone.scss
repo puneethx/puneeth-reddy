@@ -1,0 +1,240 @@
+/* =============================================================
+ * Iphone — port of Magic UI's <Iphone /> to plain SCSS.
+ * Component structure mirrors the Magic UI SVG frame:
+ *   iphone → frame → bezel → screen → (island + content + home)
+ * Side buttons are absolute pills attached to the outermost node.
+ * ============================================================ */
+
+.iphone {
+  --iphone-w: 320px;   /* real component prop equivalent — width in px */
+  --iphone-radius: 48px;
+  position: relative;
+  width: var(--iphone-w);
+  aspect-ratio: 300 / 616;   /* iPhone 15 Pro proportions */
+  margin: 0 auto;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.55));
+  /* transform ensures side buttons don't get clipped */
+  isolation: isolate;
+}
+
+/* ---------- Outer titanium frame ---------- */
+.iphone-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--iphone-radius);
+  background: linear-gradient(160deg,
+    #2b2b2f 0%,
+    #17171a 20%,
+    #2b2b2f 50%,
+    #17171a 80%,
+    #2b2b2f 100%
+  );
+  padding: 3px;                /* frame thickness */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Inner black bezel ---------- */
+.iphone-bezel {
+  position: absolute;
+  inset: 3px;
+  border-radius: calc(var(--iphone-radius) - 3px);
+  background: #050505;
+  padding: 4px;                /* bezel thickness */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* ---------- Screen surface ---------- */
+.iphone-screen {
+  position: absolute;
+  inset: 7px;                  /* frame(3) + bezel(4) */
+  border-radius: calc(var(--iphone-radius) - 7px);
+  background: linear-gradient(180deg, #0e0d12 0%, #0a090e 100%);
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 0 40px rgba(201, 100, 66, 0.05);
+}
+
+/* ---------- Status bar (time + signal/wifi/battery) ---------- */
+.iphone-status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 42px;                /* matches island's vertical band */
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #f5f5f5;
+  z-index: 9;                  /* below island (10) so island can overlap the middle */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  pointer-events: none;
+}
+.iphone-status-time {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+.iphone-status-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #f5f5f5;
+}
+.iphone-status-signal { display: block; }
+.iphone-status-signal rect { fill: #f5f5f5; }
+.iphone-status-wifi { display: block; color: #f5f5f5; }
+.iphone-status-battery {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 1px;
+  box-sizing: border-box;
+  /* Battery nub on the right end */
+  &::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 3px;
+    width: 2px;
+    height: 5px;
+    border-radius: 0 1px 1px 0;
+    background: rgba(255, 255, 255, 0.85);
+  }
+}
+.iphone-status-battery-fill {
+  display: block;
+  width: 78%;                  /* ~78% charge */
+  height: 100%;
+  border-radius: 1.5px;
+  background: #f5f5f5;
+}
+
+/* ---------- Dynamic island ---------- */
+.iphone-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32%;
+  min-width: 84px;
+  height: 22px;
+  background: #000;
+  border-radius: 999px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.iphone-island-cam {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #2a2a30 0%, #050505 65%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 4px rgba(232, 180, 140, 0.35);
+}
+
+/* ---------- Optional title (mono chip below island) ---------- */
+.iphone-title {
+  position: absolute;
+  top: 42px;                 /* just below the dynamic island (island is 22px @ top:10 → ends at 32) */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cfcfd6;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 9;
+  white-space: nowrap;
+}
+/* When a title is present, push the content down further so the first
+   child (e.g. category tabs) doesn't overlap the title chip. */
+.iphone-title ~ .iphone-content { padding-top: 74px; }
+
+/* ---------- Screen content ---------- */
+.iphone-content {
+  position: absolute;
+  inset: 0;
+  padding-top: 38px;           /* leave space for the island */
+  padding-bottom: 20px;        /* leave space for the home indicator */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Let child pointer handlers own the gesture. Without this, iOS
+     Safari can intercept the drag as a page scroll. */
+  touch-action: none;
+}
+
+/* ---------- Home indicator ---------- */
+.iphone-home {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  width: 34%;
+  min-width: 90px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.55);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ---------- Side buttons (titanium pills clipped to the shell) ---------- */
+.iphone-btn {
+  position: absolute;
+  background: linear-gradient(180deg, #2b2b2f, #17171a);
+  border-radius: 2px;
+  z-index: -1;                 /* sit behind the frame but bleed outside */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+/* Silence switch — top-left */
+.iphone-btn--silence {
+  left: -2px;
+  top: 12%;
+  width: 3px;
+  height: 26px;
+}
+/* Volume up */
+.iphone-btn--vol-up {
+  left: -3px;
+  top: 21%;
+  width: 4px;
+  height: 46px;
+}
+/* Volume down */
+.iphone-btn--vol-down {
+  left: -3px;
+  top: 33%;
+  width: 4px;
+  height: 46px;
+}
+/* Power — right side */
+.iphone-btn--power {
+  right: -3px;
+  top: 25%;
+  width: 4px;
+  height: 76px;
+}
+
+/* ---------- Responsive width (component prop equivalent) ---------- */
+@media (max-width: 380px) {
+  .iphone { --iphone-w: 270px; }
+}

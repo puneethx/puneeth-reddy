@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FiDownload, FiX } from 'react-icons/fi'
+import { FiDownload } from 'react-icons/fi'
 import SpecularButton from './SpecularButton.jsx'
 import NavEmbedding from './NavEmbedding.jsx'
 import './navbar.scss'
@@ -100,81 +100,39 @@ export default function Navbar({ onDownload }) {
         <span />
       </button>
 
-      {/* Mobile menu overlay.
-       * Layout: 3 rows.
-       *   row 1: [About, Experience]
-       *   row 2: [Certified, Projects, Hackathons]
-       *   row 3: [Contact, Resume-with-icon]
-       * The "Resume" pill is inline with the other links, styled with the
-       * accent gradient — it lives in the same grid so it feels part of the
-       * bubble cluster, not a separate button below. */}
+      {/* Mobile menu overlay — replaced the bubble-pill grid with the
+       * same NavEmbedding graph the desktop shows. Full-screen dark
+       * backdrop, blurred, with the embedding graph centered. Tapping
+       * a node navigates to its section AND closes the overlay. */}
       <div
-        className={`mnav-overlay ${mobileOpen ? 'open' : ''}`}
+        className={`mnav-overlay mnav-overlay--graph ${mobileOpen ? 'open' : ''}`}
         aria-hidden={!mobileOpen}
         onClick={closeMenu}
       >
-        <div className="mnav-panel" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            className="mnav-close"
-            onClick={closeMenu}
-            aria-label="Close menu"
-          >
-            <FiX />
-          </button>
-
-          <div className="mnav-rows">
-            {/* Row 1 — 2 pills */}
-            <div className="mnav-row row-2" style={{ '--row': 0 }}>
-              {links.slice(0, 2).map((l, i) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={closeMenu}
-                  className="mnav-pill"
-                  style={{ '--i': i }}
-                >
-                  {l.label}
-                </a>
-              ))}
-            </div>
-
-            {/* Row 2 — 3 pills */}
-            <div className="mnav-row row-3" style={{ '--row': 1 }}>
-              {links.slice(2, 5).map((l, i) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={closeMenu}
-                  className="mnav-pill"
-                  style={{ '--i': i + 2 }}
-                >
-                  {l.label}
-                </a>
-              ))}
-            </div>
-
-            {/* Row 3 — Contact + Resume (with download icon, accent gradient) */}
-            <div className="mnav-row row-2" style={{ '--row': 2 }}>
-              <a
-                href={links[5].href}
-                onClick={closeMenu}
-                className="mnav-pill"
-                style={{ '--i': 5 }}
-              >
-                {links[5].label}
-              </a>
-              <button
-                type="button"
-                onClick={() => { onDownload(); closeMenu() }}
-                className="mnav-pill mnav-pill-resume"
-                style={{ '--i': 6 }}
-                aria-label="Download resume"
-              >
-                <FiDownload /> Resume
-              </button>
-            </div>
+        <div className="mnav-panel mnav-panel--graph" onClick={(e) => e.stopPropagation()}>
+          <div className="mnav-graph-head">
+            <span className="mnav-graph-dot" />
+            <span>embedding space · nav</span>
           </div>
+
+          <div className="mnav-graph-frame">
+            <NavEmbedding
+              items={links}
+              activeIndex={activeSection}
+              onSelect={(idx, item) => {
+                if (!item?.href) return
+                const a = document.createElement('a')
+                a.href = item.href
+                a.style.display = 'none'
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                closeMenu()
+              }}
+            />
+          </div>
+
+          <div className="mnav-graph-hint">Tap a node to jump</div>
         </div>
       </div>
     </>

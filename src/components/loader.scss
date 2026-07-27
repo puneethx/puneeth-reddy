@@ -1,0 +1,309 @@
+/* =============================================================
+ * Loader — agentic runtime boot animation.
+ * Fixed overlay covering the viewport. Auto-dismounted after ~3s.
+ * ============================================================ */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a090c;
+  color: var(--fg, #f5f5f5);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 16px;
+  padding: 32px 24px;
+  overflow: hidden;
+  isolation: isolate;
+  /* Full-screen fade on unmount */
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  &.loader--booting { opacity: 0; animation: loader-fade-in 0.35s 0.05s ease forwards; }
+  &.loader--active,
+  &.loader--collapsing { opacity: 1; }
+  &.loader--collapsing { animation: loader-collapse 0.7s ease forwards; }
+}
+
+@keyframes loader-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes loader-collapse {
+  0%   { opacity: 1; transform: scale(1);   filter: blur(0px); }
+  70%  { opacity: 1; transform: scale(0.98); filter: blur(1px); }
+  100% { opacity: 0; transform: scale(0.9);  filter: blur(4px); }
+}
+
+/* ---------- Ambient aurora backdrop ---------- */
+.loader-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+.loader-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  animation: loader-blob 8s ease-in-out infinite alternate;
+  &.b1 { width: 480px; height: 480px; top: -10%; left: -10%;  background: radial-gradient(circle, #c96442, transparent 60%); }
+  &.b2 { width: 380px; height: 380px; bottom: -8%; right: -8%; background: radial-gradient(circle, #e8b48c, transparent 60%); animation-delay: -3s; }
+  &.b3 { width: 320px; height: 320px; top: 40%;  left: 50%;   transform: translate(-50%, -50%); background: radial-gradient(circle, #7a3826, transparent 60%); animation-delay: -6s; }
+}
+@keyframes loader-blob {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(24px, -18px) scale(1.08); }
+}
+
+/* ---------- Header line ---------- */
+.loader-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--fg-dim, #b7b7bd);
+  z-index: 2;
+}
+.loader-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent, #c96442);
+  box-shadow: 0 0 12px var(--accent, #c96442);
+  animation: loader-pulse 1.4s ease-in-out infinite;
+}
+.loader-brand {
+  color: var(--fg, #f5f5f5);
+  font-weight: 700;
+}
+.loader-brand-accent { color: var(--accent, #c96442); }
+.loader-sep { opacity: 0.4; }
+.loader-caption {
+  color: var(--fg-mute, #6b6b74);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.loader-caret {
+  display: inline-block;
+  color: var(--accent, #c96442);
+  animation: loader-blink 0.8s steps(2, start) infinite;
+}
+@keyframes loader-blink { to { opacity: 0; } }
+@keyframes loader-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 12px var(--accent, #c96442); }
+  50%      { transform: scale(1.4); box-shadow: 0 0 22px var(--accent, #c96442); }
+}
+
+/* ---------- Graph area ---------- */
+.loader-graph {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  z-index: 2;
+}
+.loader-graph-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 24px rgba(201, 100, 66, 0.35));
+}
+
+/* Concentric rings — subtle spin */
+.loader-ring {
+  fill: none;
+  stroke: rgba(232, 180, 140, 0.16);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+  transform-origin: center;
+  animation: loader-spin 12s linear infinite;
+}
+.loader-ring.r2 { stroke: rgba(201, 100, 66, 0.22); animation-duration: 18s; animation-direction: reverse; }
+.loader-ring.r3 { stroke: rgba(255, 255, 255, 0.08); animation-duration: 26s; stroke-dasharray: 2 10; }
+@keyframes loader-spin { to { transform: rotate(360deg); } }
+
+/* Wires — start dim, pop bright when their agent lights up */
+.loader-wire {
+  stroke: rgba(232, 180, 140, 0.2);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  transition: stroke 0.5s, stroke-width 0.5s, filter 0.5s;
+  &.lit {
+    stroke: var(--accent, #c96442);
+    stroke-width: 1.8;
+    filter: drop-shadow(0 0 4px rgba(201, 100, 66, 0.9));
+    animation: loader-wire-flow 1.6s linear infinite;
+    stroke-dasharray: 6 4;
+  }
+}
+@keyframes loader-wire-flow {
+  to { stroke-dashoffset: -20; }
+}
+
+/* Agent nodes — pop from dim to lit */
+.loader-node {
+  fill: rgba(15, 15, 20, 0.9);
+  stroke: rgba(232, 180, 140, 0.35);
+  stroke-width: 1.2;
+  transition: fill 0.35s, stroke 0.35s, r 0.35s, filter 0.35s;
+  &.lit {
+    fill: var(--accent, #c96442);
+    stroke: #ffe6d0;
+    filter: drop-shadow(0 0 6px rgba(201, 100, 66, 0.9));
+    animation: loader-node-pulse 1.4s ease-in-out infinite;
+  }
+}
+.loader-node-glow {
+  opacity: 0.6;
+  animation: loader-node-halo 2s ease-in-out infinite;
+}
+@keyframes loader-node-halo {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.75; }
+}
+@keyframes loader-node-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+.loader-node-label {
+  fill: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  paint-order: stroke fill;
+  stroke: rgba(10, 10, 11, 0.9);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  transition: fill 0.35s;
+  &.lit { fill: var(--fg, #f5f5f5); }
+}
+
+/* Central core */
+.loader-core-halo {
+  animation: loader-core-halo 2.6s ease-in-out infinite;
+}
+@keyframes loader-core-halo {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+.loader-core {
+  fill: #fff4e8;
+  filter: drop-shadow(0 0 8px rgba(255, 244, 232, 0.95))
+          drop-shadow(0 0 16px rgba(201, 100, 66, 0.55));
+}
+.loader-core-pulse {
+  fill: none;
+  stroke: rgba(255, 244, 232, 0.75);
+  stroke-width: 1.5;
+  transform-origin: center;
+  animation: loader-core-pulse 1.8s ease-out infinite;
+}
+@keyframes loader-core-pulse {
+  0%   { transform: scale(1);   opacity: 0.75; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+/* Query token flying in */
+.loader-query {
+  position: absolute;
+  top: 50%;
+  left: -6%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(232, 180, 140, 0.4);
+  color: var(--accent-2, #e8b48c);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  animation: loader-query-fly 2.2s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes loader-query-fly {
+  0%   { transform: translate(-30px, -50%) scale(0.9); opacity: 0; }
+  20%  { opacity: 1; }
+  55%  { transform: translate(48%, -50%) scale(1);   opacity: 1; }
+  75%  { transform: translate(48%, -50%) scale(0.4); opacity: 0.4; }
+  100% { transform: translate(48%, -50%) scale(0);   opacity: 0; }
+}
+
+/* ---------- Live agent trace log ---------- */
+.loader-log {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  height: 96px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3px;
+  font-size: 11.5px;
+  color: rgba(232, 180, 140, 0.85);
+  border: 1px solid rgba(232, 180, 140, 0.2);
+  border-radius: 10px;
+  background: rgba(10, 10, 12, 0.55);
+  backdrop-filter: blur(6px);
+  padding: 10px 14px;
+  z-index: 2;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.loader-log-line {
+  opacity: 0;
+  transform: translateX(-6px);
+  animation: loader-log-in 0.4s ease forwards;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes loader-log-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ---------- Progress bar ---------- */
+.loader-progress {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  height: 26px;
+  z-index: 2;
+}
+.loader-progress-fill {
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c96442, #e8b48c);
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgba(201, 100, 66, 0.7);
+  transition: width 0.1s linear;
+}
+.loader-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  color: var(--fg-mute, #6b6b74);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-bottom: 5px;
+}
+.loader-progress-pct { color: var(--fg, #f5f5f5); font-weight: 700; }
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width: 640px) {
+  .loader { padding: 20px 14px; gap: 12px; }
+  .loader-head { font-size: 11px; flex-wrap: wrap; }
+  .loader-log { height: 78px; font-size: 10.5px; padding: 8px 12px; }
+  .loader-graph { max-width: 340px; }
+  .loader-query { display: none; }
+}

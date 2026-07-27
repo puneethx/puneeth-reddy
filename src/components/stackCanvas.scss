@@ -257,6 +257,9 @@
   transform: translateY(2px);
   opacity: 0.55;
   transition: opacity 0.25s;
+  /* Keep the stroke uniform when the SVG is stretched (preserveAspectRatio="none"
+     on phone) so wires don't look thick on one axis and thin on the other. */
+  vector-effect: non-scaling-stroke;
   &.dim { opacity: 0.08; }
   &.hot { opacity: 0.75; }
 }
@@ -266,6 +269,7 @@
   stroke: rgba(232, 180, 140, 0.35);
   stroke-width: 1.6;
   stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
   transition: stroke 0.25s, stroke-width 0.25s, opacity 0.25s, filter 0.25s;
   &.hot {
     stroke: var(--accent);
@@ -305,6 +309,15 @@
   letter-spacing: 0.02em;
   cursor: grab;
   white-space: nowrap;
+  /* Touch: keep the browser from stealing pointer events for pan/zoom.
+     Without this, the pointerdown/move handlers never fire on mobile
+     because the browser interprets the drag as a page scroll. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent iOS's dim callout on long-press */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
   box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.55);
   transition:
     box-shadow 0.3s,
@@ -592,4 +605,118 @@
   }
   .scv-node--lg { font-size: 11.5px; padding: 6px 12px; }
   .scv-node--sm { font-size: 9.5px;  padding: 4px 8px; }
+}
+
+/* ============================================================
+ * PHONE VIEW — the Mac window is hidden entirely on ≤640px.
+ * A dedicated iPhone-framed view (see .scv-phone below) replaces
+ * it. See StackCanvas.jsx for the render fork.
+ * ============================================================ */
+@media (max-width: 640px) {
+  .scv-mac-shell { display: none !important; }
+  .scv-phone     { display: block; }
+  .scv-info-title { font-size: clamp(18px, 5vw, 22px); }
+  .scv-info-tip { padding: 10px 12px; }
+  .scv-info-tip-text { font-size: 12px; }
+}
+@media (min-width: 641px) {
+  .scv-phone { display: none; }
+}
+
+/* ---------- Phone view internals (rendered inside <Iphone />) ---------- */
+.scv-phone {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 340px;
+}
+
+/* Horizontal-scrollable category tabs at the top of the screen */
+.scv-phone-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+.scv-phone-tab {
+  --tc: #c96442;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cfcfd6;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  &.active {
+    background: color-mix(in srgb, var(--tc) 22%, transparent);
+    border-color: color-mix(in srgb, var(--tc) 60%, transparent);
+    color: #fff;
+  }
+}
+.scv-phone-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tc);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--tc) 60%, transparent);
+}
+
+/* Canvas host inside the phone screen — centers the vertically-shaped
+   canvas within the phone's flex column. The canvas keeps its exact
+   460:900 aspect ratio so % node positioning stays pixel-aligned with
+   the SVG grid/wires (which use xMidYMid slice). */
+.scv-phone-canvas {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 6px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  /* Prevent browser from claiming touch gestures inside the canvas
+     area — nodes rely on pointermove for drag. */
+  touch-action: none;
+}
+.scv-phone-canvas .stack-canvas {
+  aspect-ratio: 460 / 900;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  /* If height-driven width would exceed the phone screen, cap by width
+     instead so we never overflow. */
+  max-height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+/* Nodes get smaller labels on the tighter phone canvas */
+.scv-phone-canvas .scv-node       { font-size: 9.5px; padding: 3px 7px; }
+.scv-phone-canvas .scv-node--lg   { font-size: 10.5px; padding: 4px 8px; }
+.scv-phone-canvas .scv-node--sm   { font-size: 8.5px;  padding: 2px 6px; }
+.scv-phone-canvas .scv-node-dot   { width: 5px; height: 5px; }
+.scv-phone-canvas .scv-node--sm .scv-node-dot { width: 4px; height: 4px; }
+/* Puneeth's comment bubble is narrower on phone so it doesn't clip */
+.scv-phone-canvas .scv-collab-bubble {
+  max-width: 200px;
+  font-size: 11px;
+}
+
+.scv-phone-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b74;
+  text-align: center;
+  padding: 4px 12px 8px;
 }

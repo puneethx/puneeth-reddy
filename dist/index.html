@@ -8,10 +8,492 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-DvrlUzFv.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CXnj8AXm.css">
+
+    <!-- ==========================================================
+      Inline boot loader — renders instantly with the HTML, before
+      the JS bundle downloads. Critical for slow-network users.
+      React removes #boot-loader when it mounts (see main.jsx).
+      Self-contained: inline SVG + CSS animations, no external deps.
+    =========================================================== -->
+    <style>
+      html, body { margin: 0; padding: 0; background: #0a090c; color: #f5f5f5; }
+      body { overflow: hidden; }
+      body.app-ready { overflow: auto; }
+
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background:
+          radial-gradient(1200px 700px at 20% 0%, rgba(201,100,66,0.18), transparent 60%),
+          radial-gradient(900px  700px at 80% 100%, rgba(232,180,140,0.10), transparent 60%),
+          #0a090c;
+        color: #f5f5f5;
+        font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 28px 20px;
+        overflow: hidden;
+        isolation: isolate;
+        transition: opacity 0.55s ease, transform 0.55s ease, filter 0.55s ease;
+      }
+      #boot-loader.bl-hide {
+        opacity: 0;
+        transform: scale(0.96);
+        filter: blur(4px);
+        pointer-events: none;
+      }
+
+      /* ---- Header ---- */
+      .bl-head {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 12px; letter-spacing: 0.02em; color: #b7b7bd;
+      }
+      .bl-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #c96442; box-shadow: 0 0 12px #c96442;
+        animation: bl-pulse 1.4s ease-in-out infinite;
+      }
+      .bl-brand { color: #f5f5f5; font-weight: 700; }
+      .bl-brand-accent { color: #c96442; }
+      .bl-sep { opacity: 0.4; }
+      .bl-caption { color: #6b6b74; display: inline-flex; align-items: center; gap: 3px; }
+      .bl-caret { color: #c96442; animation: bl-blink 0.8s steps(2, start) infinite; }
+      @keyframes bl-blink { to { opacity: 0; } }
+      @keyframes bl-pulse {
+        0%, 100% { transform: scale(1);   box-shadow: 0 0 12px #c96442; }
+        50%      { transform: scale(1.4); box-shadow: 0 0 22px #c96442; }
+      }
+
+      /* ---- Graph ---- */
+      .bl-graph {
+        width: min(720px, 92vw);
+        aspect-ratio: 720 / 340;
+        position: relative;
+      }
+      .bl-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+      /* Edge paths — dashed with a flowing dashoffset animation so the
+         edges themselves look like they're carrying data even before
+         the token dots reach them. */
+      .bl-edge {
+        fill: none;
+        stroke: rgba(232, 180, 140, 0.35);
+        stroke-width: 1.4;
+        stroke-linecap: round;
+        stroke-dasharray: 6 6;
+        animation: bl-edge-flow 1.8s linear infinite;
+        filter: drop-shadow(0 0 3px rgba(201, 100, 66, 0.35));
+      }
+      @keyframes bl-edge-flow { to { stroke-dashoffset: -24; } }
+
+      /* Node body — dark pill with orange border; label sits inside */
+      .bl-node-box {
+        fill: rgba(15, 15, 20, 0.95);
+        stroke: #c96442;
+        stroke-width: 1.4;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+      }
+      .bl-node-halo {
+        fill: rgba(201, 100, 66, 0.14);
+        animation: bl-halo 2.4s ease-in-out infinite;
+      }
+      @keyframes bl-halo {
+        0%, 100% { opacity: 0.35; }
+        50%      { opacity: 0.9; }
+      }
+      /* NOTE: no `transform` animations on SVG child elements — CSS
+         `transform: scale(...)` on a circle inside a <g transform="…">
+         can override the parent's translate in some browsers, snapping
+         the dot to the SVG's (0,0). We animate the drop-shadow filter
+         instead so only the glow "breathes" — the dot stays put. */
+      .bl-node-dot {
+        fill: #c96442;
+        animation: bl-node-glow 1.6s ease-in-out infinite;
+      }
+      @keyframes bl-node-glow {
+        0%, 100% { filter: drop-shadow(0 0 3px rgba(201, 100, 66, 0.7)); }
+        50%      { filter: drop-shadow(0 0 7px rgba(201, 100, 66, 1))
+                          drop-shadow(0 0 12px rgba(232, 180, 140, 0.55)); }
+      }
+      /* Stagger so nodes don't all breathe in unison */
+      .bl-n1 { animation-delay: -0.0s; }
+      .bl-n2 { animation-delay: -0.2s; }
+      .bl-n3 { animation-delay: -0.4s; }
+      .bl-n4 { animation-delay: -0.6s; }
+      .bl-n5 { animation-delay: -0.8s; }
+      .bl-n6 { animation-delay: -1.0s; }
+
+      .bl-node-label {
+        fill: #f5f5f5;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        dominant-baseline: middle;
+      }
+      .bl-node-sub {
+        fill: rgba(232, 180, 140, 0.75);
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 8px;
+        letter-spacing: 0.06em;
+      }
+
+      /* Token — a bright dot that travels along an edge path.
+         Each token uses <animateMotion> bound to a <path>. To avoid a
+         swarm of static dots at the start of every path (a known quirk
+         of animateMotion before its `begin` fires), we start the tokens
+         invisible and fade them in on their own delay. */
+      .bl-token {
+        fill: #ffe6d0;
+        filter: drop-shadow(0 0 5px #ffdec5)
+                drop-shadow(0 0 9px rgba(201, 100, 66, 0.85));
+        opacity: 0;
+        animation: bl-token-fade 4s ease-in-out infinite;
+      }
+      /* Fade in briefly after the animateMotion begin, ride the edge
+         while visible, then fade out just before restart so tokens
+         never "teleport" back to the origin. */
+      @keyframes bl-token-fade {
+        0%   { opacity: 0; }
+        10%  { opacity: 1; }
+        85%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      /* ---- Log panel ---- */
+      .bl-log {
+        width: min(720px, 92vw);
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 5px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: #ffe6d0;
+        background:
+          linear-gradient(180deg, rgba(20, 15, 12, 0.9), rgba(12, 10, 12, 0.9));
+        border: 1px solid rgba(232, 180, 140, 0.28);
+        border-radius: 10px;
+        padding: 12px 16px;
+        box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+      }
+      .bl-log-head {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(232, 180, 140, 0.7);
+        padding-bottom: 4px;
+        border-bottom: 1px dashed rgba(232, 180, 140, 0.18);
+        margin-bottom: 4px;
+      }
+      .bl-log-head-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #c96442; box-shadow: 0 0 8px #c96442;
+      }
+      .bl-log-line {
+        opacity: 0;
+        transform: translateX(-6px);
+        animation: bl-logline 0.5s ease forwards;
+        display: block;
+        color: #f0d7bc;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+      }
+      .bl-log-line .lg-t   { color: #8f8f95; margin-right: 8px; }
+      .bl-log-line .lg-tag { color: #e8b48c; font-weight: 700; }
+      .bl-log-line .lg-ok  { color: #4ade80; font-weight: 700; }
+      @keyframes bl-logline { to { opacity: 1; transform: translateX(0); } }
+      .bl-log-line.l1 { animation-delay: 0.10s; }
+      .bl-log-line.l2 { animation-delay: 0.45s; }
+      .bl-log-line.l3 { animation-delay: 0.85s; }
+      .bl-log-line.l4 { animation-delay: 1.25s; }
+      .bl-log-line.l5 { animation-delay: 1.65s; }
+      .bl-log-line.l6 { animation-delay: 2.05s; }
+      .bl-log-line.l7 { animation-delay: 2.45s; }
+      .bl-log-line.l8 { animation-delay: 2.90s; }
+
+      /* ---- Progress bar ---- */
+      .bl-progress {
+        width: min(720px, 92vw);
+        position: relative;
+      }
+      .bl-progress-meta {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 10px; color: #6b6b74; letter-spacing: 0.14em;
+        text-transform: uppercase; padding-bottom: 6px;
+      }
+      .bl-progress-status { color: #f5f5f5; font-weight: 700; }
+      .bl-track {
+        width: 100%; height: 3px; border-radius: 3px;
+        background: rgba(232, 180, 140, 0.14);
+        overflow: hidden; position: relative;
+      }
+      .bl-fill {
+        position: absolute; height: 100%; width: 35%;
+        left: -35%;
+        background: linear-gradient(90deg, transparent, #c96442 40%, #e8b48c 60%, transparent);
+        box-shadow: 0 0 12px rgba(201, 100, 66, 0.7);
+        border-radius: 3px;
+        animation: bl-fill 1.6s ease-in-out infinite;
+      }
+      @keyframes bl-fill {
+        0%   { left: -35%; }
+        100% { left: 100%; }
+      }
+
+      /* ---- Responsive ---- */
+      @media (max-width: 640px) {
+        #boot-loader { padding: 20px 14px; gap: 16px; }
+        .bl-head { font-size: 10.5px; flex-wrap: wrap; justify-content: center; text-align: center; }
+        .bl-log { font-size: 11px; padding: 10px 12px; min-height: 100px; }
+        .bl-graph { aspect-ratio: 720 / 400; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .bl-edge, .bl-node-dot, .bl-node-halo, .bl-token,
+        .bl-log-line, .bl-fill, .bl-dot, .bl-caret,
+        animateMotion { animation: none !important; }
+        .bl-log-line { opacity: 1; transform: none; }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-ozn6Rty0.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-uAjYYzY1.css">
   </head>
   <body>
+    <!-- ==========================================================
+      Boot loader (renders on first paint). React removes it in
+      main.jsx once mounted. Self-contained inline SVG + CSS.
+    =========================================================== -->
+    <div id="boot-loader" role="status" aria-live="polite" aria-label="Loading puneeth.reddy">
+      <div class="bl-head">
+        <span class="bl-dot"></span>
+        <span class="bl-brand">puneeth<span class="bl-brand-accent">.</span>reddy</span>
+        <span class="bl-sep">/</span>
+        <span class="bl-caption">agent graph :: streaming<span class="bl-caret">▊</span></span>
+      </div>
+
+      <!-- Left-to-right LangGraph-style DAG.
+           Node positions on a 720x340 canvas:
+             QUERY    ( 60, 170)
+             PLANNER  (200, 170)
+             RETRIEVER(360,  80)
+             EXECUTOR (360, 260)
+             MEMORY   (520,  80)
+             REFLECT  (520, 260)
+             RESPONSE (660, 170)
+           Edges are drawn as paths (used both for the visible edge
+           stroke AND as <animateMotion> paths for token dots). -->
+      <div class="bl-graph" aria-hidden="true">
+        <svg class="bl-svg" viewBox="0 0 720 340" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <!-- Edge paths — reused by animateMotion below -->
+            <path id="e1" d="M 108 170 L 152 170" />
+            <path id="e2" d="M 248 170 C 300 170, 312 100, 360 80" />
+            <path id="e3" d="M 248 170 C 300 170, 312 240, 360 260" />
+            <path id="e4" d="M 408 80  L 472 80" />
+            <path id="e5" d="M 408 260 L 472 260" />
+            <path id="e6" d="M 568 80  C 620 80,  632 150, 660 170" />
+            <path id="e7" d="M 568 260 C 620 260, 632 190, 660 170" />
+            <!-- Reflector → Planner (feedback loop) -->
+            <path id="e8" d="M 480 260 C 380 320, 240 320, 190 200" />
+          </defs>
+
+          <!-- Draw the edges (visible strokes) -->
+          <use href="#e1" class="bl-edge" />
+          <use href="#e2" class="bl-edge" style="animation-delay: -0.2s;" />
+          <use href="#e3" class="bl-edge" style="animation-delay: -0.4s;" />
+          <use href="#e4" class="bl-edge" style="animation-delay: -0.6s;" />
+          <use href="#e5" class="bl-edge" style="animation-delay: -0.8s;" />
+          <use href="#e6" class="bl-edge" style="animation-delay: -1.0s;" />
+          <use href="#e7" class="bl-edge" style="animation-delay: -1.2s;" />
+          <use href="#e8" class="bl-edge" style="stroke-dasharray: 3 6; opacity: 0.55;" />
+
+          <!-- Node pill helper: <g> per node, positioned with translate -->
+
+          <!-- QUERY -->
+          <g transform="translate(60 170)">
+            <ellipse class="bl-node-halo" rx="46" ry="24" />
+            <rect class="bl-node-box" x="-48" y="-16" width="96" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n1" cx="-30" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-15" y="1.5">QUERY</text>
+          </g>
+
+          <!-- PLANNER -->
+          <g transform="translate(200 170)">
+            <ellipse class="bl-node-halo" rx="52" ry="24" />
+            <rect class="bl-node-box" x="-52" y="-16" width="104" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n2" cx="-36" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-20" y="1.5">PLANNER</text>
+          </g>
+
+          <!-- RETRIEVER -->
+          <g transform="translate(360 80)">
+            <ellipse class="bl-node-halo" rx="56" ry="24" />
+            <rect class="bl-node-box" x="-56" y="-16" width="112" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n3" cx="-40" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-24" y="1.5">RETRIEVER</text>
+          </g>
+
+          <!-- EXECUTOR -->
+          <g transform="translate(360 260)">
+            <ellipse class="bl-node-halo" rx="52" ry="24" />
+            <rect class="bl-node-box" x="-52" y="-16" width="104" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n4" cx="-36" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-20" y="1.5">EXECUTOR</text>
+          </g>
+
+          <!-- MEMORY -->
+          <g transform="translate(520 80)">
+            <ellipse class="bl-node-halo" rx="48" ry="24" />
+            <rect class="bl-node-box" x="-48" y="-16" width="96" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n5" cx="-32" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-16" y="1.5">MEMORY</text>
+          </g>
+
+          <!-- REFLECTOR -->
+          <g transform="translate(520 260)">
+            <ellipse class="bl-node-halo" rx="56" ry="24" />
+            <rect class="bl-node-box" x="-56" y="-16" width="112" height="32" rx="16" />
+            <circle class="bl-node-dot bl-n6" cx="-40" cy="0" r="3.5" />
+            <text class="bl-node-label" x="-24" y="1.5">REFLECTOR</text>
+          </g>
+
+          <!-- RESPONSE (final) -->
+          <g transform="translate(660 170)">
+            <ellipse class="bl-node-halo" rx="52" ry="24" style="fill: rgba(232, 180, 140, 0.22);" />
+            <rect class="bl-node-box" x="-52" y="-16" width="104" height="32" rx="16" style="stroke: #e8b48c;" />
+            <circle class="bl-node-dot" cx="-36" cy="0" r="3.5" style="fill: #e8b48c;" />
+            <text class="bl-node-label" x="-20" y="1.5">RESPONSE</text>
+          </g>
+
+          <!-- =====================================================
+               Token dots — one per edge, all running on the same 4s
+               loop as the CSS fade keyframe. Negative `begin` offsets
+               spread them out around the graph without any "swarm at
+               t=0" pop-in. The CSS `bl-token-fade` handles visibility
+               (fade in as they leave the source, fade out before they
+               loop back), so nothing ever teleports. Each token also
+               overrides its animation-delay to match the motion begin.
+          ===================================================== -->
+
+          <!-- e1: QUERY → PLANNER -->
+          <circle r="4" class="bl-token" style="animation-delay: 0s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="0s">
+              <mpath href="#e1" />
+            </animateMotion>
+          </circle>
+
+          <!-- e2: PLANNER → RETRIEVER -->
+          <circle r="4" class="bl-token" style="animation-delay: -0.6s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-0.6s">
+              <mpath href="#e2" />
+            </animateMotion>
+          </circle>
+
+          <!-- e3: PLANNER → EXECUTOR (mirrors e2) -->
+          <circle r="4" class="bl-token" style="animation-delay: -0.6s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-0.6s">
+              <mpath href="#e3" />
+            </animateMotion>
+          </circle>
+
+          <!-- e4: RETRIEVER → MEMORY -->
+          <circle r="4" class="bl-token" style="animation-delay: -1.4s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-1.4s">
+              <mpath href="#e4" />
+            </animateMotion>
+          </circle>
+
+          <!-- e5: EXECUTOR → REFLECTOR -->
+          <circle r="4" class="bl-token" style="animation-delay: -1.4s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-1.4s">
+              <mpath href="#e5" />
+            </animateMotion>
+          </circle>
+
+          <!-- e6: MEMORY → RESPONSE -->
+          <circle r="4" class="bl-token" style="animation-delay: -2.2s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2.2s">
+              <mpath href="#e6" />
+            </animateMotion>
+          </circle>
+
+          <!-- e7: REFLECTOR → RESPONSE -->
+          <circle r="4" class="bl-token" style="animation-delay: -2.2s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2.2s">
+              <mpath href="#e7" />
+            </animateMotion>
+          </circle>
+
+          <!-- e8: feedback (Reflector → Planner) — slower, dimmer. Uses
+               its own longer cycle to feel like an occasional retry
+               rather than mainline traffic. The `fill` and blur here
+               match the dim inner-fade so it doesn't clash with the
+               brighter forward-flow tokens. -->
+          <circle r="3" class="bl-token" style="animation-delay: -1s; animation-duration: 6s; fill: rgba(255, 230, 208, 0.6);">
+            <animateMotion dur="6s" repeatCount="indefinite" begin="-1s">
+              <mpath href="#e8" />
+            </animateMotion>
+          </circle>
+
+          <!-- Optional second wave on the two main trunks (QUERY→PLANNER
+               and PLANNER→RETRIEVER/EXECUTOR) — offset by half the
+               cycle so those edges look consistently trafficked. -->
+          <circle r="3" class="bl-token" style="animation-delay: -2s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2s">
+              <mpath href="#e1" />
+            </animateMotion>
+          </circle>
+          <circle r="3" class="bl-token" style="animation-delay: -2.6s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2.6s">
+              <mpath href="#e2" />
+            </animateMotion>
+          </circle>
+          <circle r="3" class="bl-token" style="animation-delay: -2.6s;">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2.6s">
+              <mpath href="#e3" />
+            </animateMotion>
+          </circle>
+        </svg>
+      </div>
+
+      <!-- Live agent trace log — dark card, readable text, clear tags -->
+      <div class="bl-log" aria-hidden="true">
+        <div class="bl-log-head">
+          <span class="bl-log-head-dot"></span>
+          <span>agent trace · live</span>
+        </div>
+        <span class="bl-log-line l1"><span class="lg-t">[00:00]</span><span class="lg-tag">planner</span> :: strategy=react graph=LangGraph</span>
+        <span class="bl-log-line l2"><span class="lg-t">[00:00]</span><span class="lg-tag">retriever</span> :: hybrid=BM25+cosine k=8</span>
+        <span class="bl-log-line l3"><span class="lg-t">[00:01]</span><span class="lg-tag">executor</span> :: tools=[fastapi, python, mcp]</span>
+        <span class="bl-log-line l4"><span class="lg-t">[00:01]</span><span class="lg-tag">memory</span> :: vector_store=OKF chunks=2,144</span>
+        <span class="bl-log-line l5"><span class="lg-t">[00:02]</span><span class="lg-tag">reflector</span> :: guardrails=on evals=on</span>
+        <span class="bl-log-line l6"><span class="lg-t">[00:02]</span><span class="lg-tag">router</span> :: edges=23 verified</span>
+        <span class="bl-log-line l7"><span class="lg-t">[00:03]</span><span class="lg-tag">agent</span> :: streaming "hello, puneeth.reddy"</span>
+        <span class="bl-log-line l8"><span class="lg-t">[00:03]</span><span class="lg-ok">ok</span> · handoff → ui</span>
+      </div>
+
+      <!-- Indeterminate progress -->
+      <div class="bl-progress">
+        <div class="bl-progress-meta">
+          <span>boot</span>
+          <span class="bl-progress-status">downloading assets…</span>
+        </div>
+        <div class="bl-track"><div class="bl-fill"></div></div>
+      </div>
+    </div>
+
     <div id="root"></div>
+    <script>
+      (function () {
+        var el = document.getElementById('boot-loader')
+        if (el) el.dataset.startedAt = String(performance.now())
+      })()
+    </script>
   </body>
 </html>

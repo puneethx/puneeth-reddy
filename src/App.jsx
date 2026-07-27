@@ -16,6 +16,10 @@ import Folder from './components/Folder.jsx'
 import useSmoothScroll from './hooks/useSmoothScroll.js'
 import './styles/app.scss'
 
+/* Note: the agentic-runtime boot loader lives as inline HTML+CSS in
+ * index.html so it renders on the first paint — before any JS bundle
+ * downloads (critical for slow-network users). main.jsx removes it
+ * once React mounts. See index.html #boot-loader. */
 export default function App() {
   const [throwing, setThrowing] = useState(false)
   useSmoothScroll()

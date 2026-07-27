@@ -101,6 +101,94 @@
   }
   .mnav-close { display: none; } /* hamburger already toggles */
 
+  /* ================================================================
+   *  Mobile menu — GRAPH variant.
+   *  Full-screen overlay that renders the NavEmbedding graph instead
+   *  of the old bubble pills. Layout: heading chip on top, big square
+   *  graph in the middle, hint text at the bottom, close (X) top-right.
+   * ================================================================ */
+  .mnav-overlay--graph {
+    padding: 60px 20px 40px;
+    &.open {
+      background: rgba(10, 10, 11, 0.96);
+    }
+  }
+  .mnav-panel--graph {
+    max-width: 520px;
+    padding: 12px 0;
+    gap: 14px;
+    overflow: visible;
+    position: relative;
+  }
+  /* No dedicated close button in the graph overlay — the floating
+     hamburger already animates into an X while the overlay is open,
+     and tapping outside the panel also closes it. */
+  .mnav-graph-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 180, 140, 0.28);
+    background: rgba(201, 100, 66, 0.1);
+    color: var(--accent-2, #e8b48c);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    align-self: center;
+    /* Fade + slide in when overlay opens */
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.35s ease 0.05s, transform 0.35s ease 0.05s;
+  }
+  .mnav-graph-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  .mnav-graph-frame {
+    width: 100%;
+    max-width: 480px;
+    align-self: center;
+    aspect-ratio: 1;
+    padding: 8px;
+    border-radius: 20px;
+    background:
+      radial-gradient(60% 60% at 50% 50%, rgba(201, 100, 66, 0.12), transparent 70%),
+      rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+      inset 0 0 0 1px rgba(232, 180, 140, 0.08),
+      0 30px 60px -20px rgba(0, 0, 0, 0.6);
+    /* Fade + scale in when overlay opens */
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s,
+                transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
+  }
+  .mnav-graph-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-mute, #6b6b74);
+    align-self: center;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.35s ease 0.35s, transform 0.35s ease 0.35s;
+  }
+  /* Reveal children once the overlay is open */
+  .mnav-overlay--graph.open .mnav-graph-head,
+  .mnav-overlay--graph.open .mnav-graph-frame,
+  .mnav-overlay--graph.open .mnav-graph-hint {
+    opacity: 1;
+    transform: none;
+  }
+
   .mnav-rows {
     width: 100%;
     display: flex;

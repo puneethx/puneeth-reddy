@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { FiChevronRight, FiChevronLeft, FiExternalLink } from 'react-icons/fi'
 import './horizontalCardStack.scss'
 
@@ -69,7 +69,21 @@ function CardContent({ card, isFocus }) {
   )
 }
 
-function AnimatedCard({ card, index, direction, cardW }) {
+/* ---- Card animation tuning ----
+ * Different physics for entry vs slot-shuffle:
+ *   • ENTRY  — softer, more damped (bounce 0.18) so the incoming card
+ *              feels weighty as it lands.
+ *   • SLOT   — snappier stiffness so flanks respond fast to a swipe.
+ * The `velocityX` prop is the pointer velocity captured on drag-end
+ * and forwarded here; Framer's spring transition uses it as the
+ * initial velocity so a hard flick actually carries momentum.
+ */
+const SLOT_SPRING = { type: 'spring', stiffness: 260, damping: 32, mass: 0.9 }
+
+function AnimatedCard({
+  card, index, direction, cardW, velocityX = 0,
+  focusRotate, focusScale,
+}) {
   const positions = slotOffsets(cardW)
   const exits = exitOffsets(cardW)
   const pos = positions[index] ?? positions[1]
@@ -87,6 +101,12 @@ function AnimatedCard({ card, index, direction, cardW }) {
     exit: (dir) => dir === 'back' ? exits.back : exits.forward,
   }
 
+  /* The focus card gets a LIVE rotate response driven by the parent
+     stage's dragX motion value. Only `rotate` is used here so it
+     doesn't clash with `animate.scale`; scale is still handled by the
+     slot animation. Flanks get no drag-linked transform. */
+  const styleExtras = isFocus ? { rotate: focusRotate } : {}
+
   return (
     <motion.div
       key={card._stackId}
@@ -101,13 +121,23 @@ function AnimatedCard({ card, index, direction, cardW }) {
         filter: `blur(${pos.blur}px)`,
       }}
       exit="exit"
-      transition={{ type: 'spring', duration: 0.9, bounce: 0.15 }}
-      style={{ zIndex, width: cardW }}
+      transition={{
+        ...SLOT_SPRING,
+        x: { ...SLOT_SPRING, velocity: velocityX },
+      }}
+      style={{ zIndex, width: cardW, ...styleExtras }}
       className={`hcs-card ${isFocus ? 'is-focus' : ''}`}
     >
       <CardContent card={card} isFocus={isFocus} />
     </motion.div>
   )
+}
+
+/* Ease helper for the mid-drag transforms — clamps into [-1, 1]
+ * with a soft S-curve so the tilt/scale response doesn't feel linear. */
+const softClamp = (v, max) => {
+  const t = Math.max(-1, Math.min(1, v / max))
+  return t * (1 - Math.abs(t) * 0.35) // ease-out toward the edges
 }
 
 export default function HorizontalCardStack({ items = [] }) {
@@ -145,9 +175,15 @@ export default function HorizontalCardStack({ items = [] }) {
     return () => ro.disconnect()
   }, [])
 
-  const advance = useCallback(() => {
+  // Momentum captured on drag-end and forwarded to the spring so a
+  // flick keeps its energy through the slot shuffle. Reset to 0 shortly
+  // after so button-driven advances don't inherit stale velocity.
+  const [releaseVelocity, setReleaseVelocity] = useState(0)
+
+  const advance = useCallback((velocity = 0) => {
     if (queue.length === 0) return
     setDirection('forward')
+    setReleaseVelocity(velocity)
     setQueue((prev) => {
       const [first, ...rest] = prev
       return [...rest, { ...first, _stackId: nextId }]
@@ -155,9 +191,10 @@ export default function HorizontalCardStack({ items = [] }) {
     setNextId((n) => n + 1)
   }, [queue.length, nextId])
 
-  const rewind = useCallback(() => {
+  const rewind = useCallback((velocity = 0) => {
     if (queue.length === 0) return
     setDirection('back')
+    setReleaseVelocity(velocity)
     setQueue((prev) => {
       const last = prev[prev.length - 1]
       const rest = prev.slice(0, prev.length - 1)
@@ -165,6 +202,53 @@ export default function HorizontalCardStack({ items = [] }) {
     })
     setNextId((n) => n + 1)
   }, [queue.length, nextId])
+
+  // Clear the velocity a moment after each shuffle so subsequent
+  // button clicks / trackpad flicks start from a clean 0.
+  useEffect(() => {
+    if (releaseVelocity === 0) return
+    const t = setTimeout(() => setReleaseVelocity(0), 400)
+    return () => clearTimeout(t)
+  }, [releaseVelocity])
+
+  /* --------- Swipe / thumb-drag ---------
+   * Motion values tracking the live drag position on the STAGE. We use
+   * these to give the center card a mid-drag tilt + subtle scale
+   * response so the interaction reads as tactile, not just "the whole
+   * stage sliding". `dragXSpring` smooths the raw dragX so nothing
+   * jitters if the finger stops abruptly.
+   */
+  const dragX       = useMotionValue(0)
+  const dragXSpring = useSpring(dragX, { stiffness: 380, damping: 34, mass: 0.6 })
+  const focusRotate = useTransform(dragXSpring, (v) => softClamp(v, cardW * 0.9) * -6) // ±6° tilt during drag
+
+  const onDragEnd = (_e, info) => {
+    const dx = info.offset.x
+    const vx = info.velocity.x
+    // Combine distance + velocity into a single "intent" score so a
+    // slow long drag AND a fast short flick both count. This produces
+    // the flick-and-let-go feel of native iOS carousels.
+    const intent = dx + vx * 0.18
+    const distanceThreshold = Math.max(56, cardW * 0.16)
+    if (intent <= -distanceThreshold) advance(vx)
+    else if (intent >= distanceThreshold) rewind(vx)
+    // Snap back — spring on dragX also unwinds the mid-drag tilt/scale.
+    dragX.set(0)
+  }
+
+  // Trackpad / horizontal wheel — one flip per gesture, throttled.
+  const wheelLockRef = useRef(0)
+  const onWheel = (e) => {
+    if (Math.abs(e.deltaX) < 24 || Math.abs(e.deltaX) < Math.abs(e.deltaY)) return
+    const now = performance.now()
+    if (now - wheelLockRef.current < 550) return
+    wheelLockRef.current = now
+    // Approximate flick velocity from deltaX so wheel-driven advances
+    // also feel weighty. deltaX is a per-frame pixel value; scale up.
+    const wheelVelocity = e.deltaX * 12
+    if (e.deltaX > 0) advance(-Math.abs(wheelVelocity))
+    else rewind(Math.abs(wheelVelocity))
+  }
 
   if (!queue.length) return null
   const total = items.length
@@ -175,7 +259,22 @@ export default function HorizontalCardStack({ items = [] }) {
 
   return (
     <div className="hcs-wrap">
-      <div className="hcs-stage" ref={stageRef}>
+      <motion.div
+        className="hcs-stage"
+        ref={stageRef}
+        drag="x"
+        /* Rubber-band elasticity while dragging, snap back to 0 on
+           release. dragMomentum: false → the flick's momentum is
+           captured by us and injected into the card's spring on
+           swap, so we don't want the stage to coast on its own. */
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.28}
+        dragMomentum={false}
+        onDrag={(_e, info) => dragX.set(info.offset.x)}
+        onDragEnd={onDragEnd}
+        onWheel={onWheel}
+        transition={SLOT_SPRING}
+      >
         <AnimatePresence initial={false} mode="popLayout" custom={direction}>
           {queue.slice(0, 3).map((card, index) => (
             <AnimatedCard
@@ -184,10 +283,12 @@ export default function HorizontalCardStack({ items = [] }) {
               index={index}
               direction={direction}
               cardW={cardW}
+              velocityX={index === 1 ? releaseVelocity : 0}
+              focusRotate={focusRotate}
             />
           ))}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       <div className="hcs-controls">
         <button
@@ -199,8 +300,11 @@ export default function HorizontalCardStack({ items = [] }) {
           <FiChevronLeft />
         </button>
         <div className="hcs-counter">
-          <span className="hcs-counter-num">{String(humanIdx).padStart(2, '0')}</span>
-          <span className="hcs-counter-total">/ {String(total).padStart(2, '0')}</span>
+          <span className="hcs-counter-row">
+            <span className="hcs-counter-num">{String(humanIdx).padStart(2, '0')}</span>
+            <span className="hcs-counter-total">/ {String(total).padStart(2, '0')}</span>
+          </span>
+          <span className="hcs-counter-hint">swipe · tap arrows</span>
         </div>
         <button
           type="button"

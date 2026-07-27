@@ -5,12 +5,33 @@
   position: relative;
   display: flex;
   align-items: center;
+  /* Never let a wide child (portrait, badges, marquee) escape the section
+     horizontally — the site is `overflow-x: hidden` at the body, but this
+     is defensive so nothing bleeds during the two-column iPad range. */
+  overflow-x: clip;
 }
 .hero-grid {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 60px;
   align-items: center;
+  /* min-width: 0 lets grid tracks shrink below content intrinsic size —
+     without this, a big <h1> in the left column can force the right
+     column past the viewport edge on narrow desktops (iPad 1160px).
+     max-width: 100% belts-and-suspenders against any child (marquee,
+     lede) forcing the track wider. */
+  > .left, > .right { min-width: 0; max-width: 100%; }
+
+  /* iPad + small-laptop (1024–1250px) — keep side-by-side, but give
+     the portrait column MORE room. The text column was still forcing
+     the portrait off-screen at 1060–1160px, so we shrink the left
+     track relative to the right and let long text wrap instead of
+     push. `minmax(0, X)` lets `fr` tracks shrink below content size. */
+  @media (min-width: 1024px) and (max-width: 1250px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+  }
+
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
     gap: 48px;
@@ -42,6 +63,20 @@
   letter-spacing: -0.03em;
   font-weight: 500;
   margin-bottom: 28px;
+
+  /* iPad + small-laptop range — cap the H1 significantly so it fits
+     into the narrower left column. Long italic names now wrap rather
+     than push the grid track wider. */
+  @media (min-width: 1024px) and (max-width: 1250px) {
+    font-size: clamp(30px, 4vw, 44px);
+    margin-bottom: 18px;
+    overflow-wrap: anywhere;
+    .name-grad { overflow-wrap: anywhere; }
+    .role {
+      font-size: clamp(15px, 1.7vw, 20px);
+      margin-top: 12px;
+    }
+  }
   .line {
     display: block;
   }
@@ -75,7 +110,7 @@
       display: inline-block;
       height: 1.2em;
       min-width: 300px;
-      @media (max-width: 1024px) {
+      @media (max-width: 1023px) {
         min-width: 0;
         flex: 1;
       }
@@ -101,6 +136,16 @@
   max-width: 620px;
   margin-bottom: 36px;
   b { color: var(--fg); font-weight: 500; }
+
+  /* iPad + small-laptop — tighter lede so it fits alongside a 340px portrait. */
+  @media (min-width: 1024px) and (max-width: 1250px) {
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin-bottom: 20px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    br { display: none; } /* let text flow naturally to fit narrow track */
+  }
 }
 .cta-row {
   display: flex;
@@ -160,6 +205,15 @@
   max-width: 460px;
   margin: 0 auto;
   aspect-ratio: 1;
+
+  /* iPad + small-laptop — shrink the portrait so text has more room. */
+  @media (min-width: 1024px) and (max-width: 1250px) {
+    max-width: 320px;
+  }
+  /* Very-narrow iPad / small laptops — shrink a bit further */
+  @media (min-width: 1024px) and (max-width: 1120px) {
+    max-width: 280px;
+  }
 }
 
 /* Mobile portrait badges — same float animation as desktop .b1/.b2/.b3 */
@@ -180,12 +234,12 @@
   50%      { transform: translateY(calc(-50% - 12px)); }
 }
 
-/* Mobile-only portrait — hidden on desktop, shown on ≤1024px.
- * Uses multiple breakpoints + a body ancestor for extra specificity.
- * The desktop .portrait-wrap and everything inside it is hidden hard. */
+/* Mobile-only portrait — hidden on desktop, shown on ≤1023px.
+ * Above 1024px the Hero uses its side-by-side layout with the
+ * .portrait-wrap on the right. */
 .portrait-mobile { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   body .hero .portrait-wrap,
   body .hero .portrait-wrap * {
     display: none !important;
@@ -273,6 +327,20 @@
   &.b1 { top: 20px; left: -30px; animation: float 5s ease-in-out infinite; }
   &.b2 { bottom: 40px; right: -40px; animation: float 5.5s ease-in-out infinite reverse; }
   &.b3 { top: 45%; right: -60px; animation: float 6s ease-in-out infinite; }
+
+  /* iPad + small-laptop range (1024–1250px). Side-by-side layout is
+     kept, but the portrait is smaller, so the negative-offset badges
+     that stick out on desktop would overflow the section here. Pull
+     them inside the portrait frame. */
+  @media (min-width: 1024px) and (max-width: 1250px) {
+    padding: 8px 12px;
+    font-size: 11px;
+    &.b1 { top: 12px; left: 6px; }
+    &.b2 { bottom: 20px; right: 6px; }
+    &.b3 { top: 45%; right: 6px; }
+    small { font-size: 9.5px; }
+  }
+
   @media (max-width: 960px) {
     &.b1 { left: 0; }
     &.b2 { right: 0; }

@@ -20,6 +20,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Thumb-drag / swipe support: show grab cursor on desktop, and
+     let touch input bypass the browser's default horizontal scroll
+     so the framer-motion drag handler owns the gesture. */
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  &:active { cursor: grabbing; }
   @media (max-width: 640px) {
     height: 400px;
   }
@@ -219,12 +227,18 @@
 }
 .hcs-counter {
   display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   font-family: var(--font-mono);
   letter-spacing: 0.06em;
-  min-width: 76px;
+  min-width: 96px;
   justify-content: center;
+}
+.hcs-counter-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
 }
 .hcs-counter-num {
   font-size: 24px;
@@ -234,6 +248,15 @@
 .hcs-counter-total {
   font-size: 13px;
   color: var(--fg-mute);
+}
+/* Subtle hint that swipe works too — sits under the counter */
+.hcs-counter-hint {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  opacity: 0.75;
+  white-space: nowrap;
 }
 /* Icon-only round nav buttons */
 .hcs-nav {

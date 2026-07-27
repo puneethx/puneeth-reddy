@@ -19,6 +19,18 @@
   }
 }
 
+/* When rendered inside the mobile hamburger overlay (see .mnav-graph-frame),
+   drop the fixed-position top-right chrome and let the parent frame size
+   it. This is the only place where NavEmbedding shows on mobile. */
+.mnav-graph-frame .nav-emb {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 100%;
+  z-index: auto;
+  display: block !important;
+}
+
 /* Layout-only wrapper — no chrome */
 .ne-panel {
   display: block;

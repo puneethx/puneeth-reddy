@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import Iphone from './Iphone.jsx'
 import './stackCanvas.scss'
 
 /* =============================================================
@@ -75,14 +76,90 @@ const EDGES = [
 const CANVAS_W = 800
 const CANVAS_H = 400
 
+/* --------- Portrait / phone layout ---------
+ * Same 16 nodes + same edges — laid out vertically so the whole graph
+ * reads comfortably inside the iPhone's tall screen. Categories are
+ * stacked top → bottom: Agentic → ML → Backend → Frontend. Positions
+ * are hand-tuned so wires stay untangled.
+ */
+const PHONE_CANVAS_W = 460
+const PHONE_CANVAS_H = 900
+/*
+ * Vertical layout for the phone canvas. Nodes are placed in four
+ * top→bottom bands (Agentic → ML → Backend → Frontend). Bands leave
+ * ~80–90px of vertical breathing room and stagger x-positions so
+ * pill labels don't overlap. Keep node x within [80, 380] so labels
+ * (which extend ±50px around x) don't clip the 460-wide canvas.
+ */
+const PHONE_NODE_POS = {
+  // ── Agentic band (y: 60–260) ─────────────────────────────
+  langgraph: { x: 150, y:  70, size: 'lg' },
+  langchain: { x: 320, y: 130, size: 'md' },
+  hybrid:    { x: 150, y: 180, size: 'md' },
+  mcp:       { x: 340, y: 220, size: 'sm' },
+  multi:     { x: 150, y: 260, size: 'md' },
+
+  // ── ML band (y: 320–460) ─────────────────────────────────
+  pytorch:   { x: 290, y: 320, size: 'md' },
+  yolo:      { x: 130, y: 370, size: 'sm' },
+  c3d:       { x: 320, y: 410, size: 'sm' },
+  ocr:       { x: 180, y: 460, size: 'sm' },
+
+  // ── Backend band (y: 520–630) ────────────────────────────
+  fastapi:   { x: 310, y: 520, size: 'md' },
+  python:    { x: 160, y: 580, size: 'md' },
+  flask:     { x: 330, y: 630, size: 'sm' },
+
+  // ── Frontend band (y: 700–820) — spread out so pills don't touch
+  //    the bottom edge or overlap each other ─────────────────
+  react:     { x: 210, y: 700, size: 'md' },
+  next:      { x: 120, y: 760, size: 'sm' },
+  three:     { x: 250, y: 810, size: 'sm' },
+  scss:      { x: 360, y: 760, size: 'sm' },
+}
+
 export default function StackCanvas() {
+  // Watch viewport so we can pick the right layout (horizontal desktop
+  // canvas vs vertical phone canvas). Any dependent constants downstream
+  // (CANVAS_W / CANVAS_H, initial node positions) switch on this flag.
+  const [isPhone, setIsPhone] = useState(
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false
+  )
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 640px)')
+    const onChange = (e) => setIsPhone(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const CW = isPhone ? PHONE_CANVAS_W : CANVAS_W
+  const CH = isPhone ? PHONE_CANVAS_H : CANVAS_H
+
+  // Build the initial-node list to match the current layout. On resize the
+  // node list is re-seeded (see effect below), so switching orientations
+  // rebuilds positions without losing the drag/collab machinery.
+  const buildInitialNodes = useCallback((phone) => {
+    return INITIAL_NODES.map((n) => {
+      const base = phone && PHONE_NODE_POS[n.id]
+        ? { ...n, ...PHONE_NODE_POS[n.id] }
+        : n
+      return { ...base, tx: base.x, ty: base.y, vx: 0, vy: 0 }
+    })
+  }, [])
+
   // Each node has:
   //  x, y      — actual (rendered) position
   //  tx, ty    — target position (where it wants to be)
   //  vx, vy    — current velocity (used for spring dynamics + release throw)
-  const [nodes, setNodes] = useState(() =>
-    INITIAL_NODES.map((n) => ({ ...n, tx: n.x, ty: n.y, vx: 0, vy: 0 }))
-  )
+  const [nodes, setNodes] = useState(() => buildInitialNodes(isPhone))
+
+  // Re-seed positions whenever the viewport crosses the phone boundary
+  useEffect(() => {
+    setNodes(buildInitialNodes(isPhone))
+  }, [isPhone, buildInitialNodes])
   const [draggingId, setDraggingId] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
   const [activeCategory, setActiveCategory] = useState(null)
@@ -122,13 +199,13 @@ export default function StackCanvas() {
     const el = containerRef.current
     if (!el) return { x: 0, y: 0 }
     const rect = el.getBoundingClientRect()
-    const scaleX = CANVAS_W / rect.width
-    const scaleY = CANVAS_H / rect.height
+    const scaleX = CW / rect.width
+    const scaleY = CH / rect.height
     return {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY,
     }
-  }, [])
+  }, [CW, CH])
 
   /* ----------------- Spring physics loop ----------------- */
   // Uses functional setNodes so it always reads the latest state — including
@@ -184,59 +261,72 @@ export default function StackCanvas() {
     }
   }, [])
 
-  /* ----------------- Pointer handlers ----------------- */
+  /* ----------------- Pointer handlers -----------------
+   * On pointerdown we install GLOBAL pointermove/up listeners on the
+   * window instead of relying on bubbling from the button. Touch/pen
+   * pointer capture is unreliable across iOS/Android — global listeners
+   * always fire, no matter where the finger ends up (even outside the
+   * canvas). The button's own pointerdown handles the initial grab.
+   */
   const onPointerDown = (e, node) => {
     e.preventDefault()
     e.stopPropagation()
-    const { x, y } = clientToCanvas(e.clientX, e.clientY)
-    dragOffset.current = { x: x - node.x, y: y - node.y }
-    lastPointer.current = { x, y, t: performance.now() }
+    const startCanvas = clientToCanvas(e.clientX, e.clientY)
+    dragOffset.current = { x: startCanvas.x - node.x, y: startCanvas.y - node.y }
+    lastPointer.current = { x: startCanvas.x, y: startCanvas.y, t: performance.now() }
     // Kill any velocity — the drag is now authoritative
     setNodes((prev) =>
       prev.map((n) => (n.id === node.id ? { ...n, vx: 0, vy: 0 } : n))
     )
     setDraggingId(node.id)
-    e.currentTarget.setPointerCapture(e.pointerId)
+    // Local capture also — helps desktop, harmless on touch
+    try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch (_) {}
+
+    const nodeId = node.id
+    const pointerId = e.pointerId
+
+    // Window-level move handler — runs even when the finger drifts off
+    // the button. Uses the same clientToCanvas math as before.
+    const handleMove = (ev) => {
+      if (ev.pointerId !== pointerId) return
+      ev.preventDefault()
+      const { x, y } = clientToCanvas(ev.clientX, ev.clientY)
+      const nx = Math.max(20, Math.min(CW - 20, x - dragOffset.current.x))
+      const ny = Math.max(20, Math.min(CH - 20, y - dragOffset.current.y))
+      const now = performance.now()
+      const dt = Math.max(1, now - lastPointer.current.t)
+      const vx = ((x - lastPointer.current.x) / dt) * 16
+      const vy = ((y - lastPointer.current.y) / dt) * 16
+      lastPointer.current = { x, y, t: now }
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === nodeId ? { ...n, x: nx, y: ny, tx: nx, ty: ny, vx, vy } : n
+        )
+      )
+    }
+
+    const handleUp = (ev) => {
+      if (ev.pointerId !== pointerId) return
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+      window.removeEventListener('pointercancel', handleUp)
+      // Freeze position as the new target
+      setNodes((prev) =>
+        prev.map((n) => (n.id === nodeId ? { ...n, tx: n.x, ty: n.y } : n))
+      )
+      setDraggingId(null)
+      triggerCollabRevert(nodeId)
+    }
+
+    window.addEventListener('pointermove', handleMove, { passive: false })
+    window.addEventListener('pointerup', handleUp)
+    window.addEventListener('pointercancel', handleUp)
   }
 
-  const onPointerMove = (e) => {
-    if (!draggingId) return
-    const { x, y } = clientToCanvas(e.clientX, e.clientY)
-    const nx = Math.max(20, Math.min(CANVAS_W - 20, x - dragOffset.current.x))
-    const ny = Math.max(20, Math.min(CANVAS_H - 20, y - dragOffset.current.y))
-    // Track pointer velocity for release throw
-    const now = performance.now()
-    const dt = Math.max(1, now - lastPointer.current.t)
-    const vx = ((x - lastPointer.current.x) / dt) * 16 // scale to per-frame
-    const vy = ((y - lastPointer.current.y) / dt) * 16
-    lastPointer.current = { x, y, t: now }
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === draggingId
-          ? { ...n, x: nx, y: ny, tx: nx, ty: ny, vx, vy }
-          : n
-      )
-    )
-  }
-
-  const onPointerUp = (e) => {
-    if (!draggingId) return
-    try { e.currentTarget.releasePointerCapture?.(e.pointerId) } catch (_) {}
-    const releasedId = draggingId
-    // On release, keep the current position as the new target and let the
-    // pointer's residual velocity carry the node a bit further (spring pulls
-    // it back in slightly, creating a subtle overshoot/wobble).
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === releasedId
-          ? { ...n, tx: n.x, ty: n.y }
-          : n
-      )
-    )
-    setDraggingId(null)
-    // Trigger the "Puneeth" collaborator cursor to swoop in and revert
-    triggerCollabRevert(releasedId)
-  }
+  // Legacy handlers still bound on the .stack-canvas — kept as no-ops
+  // for double-click reset, and to preserve JSX shape.
+  const onPointerMove = () => {}
+  const onPointerUp = () => {}
 
   /* ----------------- Collaborator cursor scene -----------------
    * Public entry — enqueue a node to be reverted. If Puneeth isn't busy,
@@ -268,7 +358,12 @@ export default function StackCanvas() {
       leaveCollab()
       return
     }
-    const init = INITIAL_NODES.find((i) => i.id === nodeId)
+    // Origin depends on which layout we're in — desktop uses INITIAL_NODES,
+    // phone uses PHONE_NODE_POS overrides. Falling back to INITIAL_NODES for
+    // nodes that don't have a phone override.
+    const initBase = INITIAL_NODES.find((i) => i.id === nodeId)
+    const phoneOverride = isPhone ? PHONE_NODE_POS[nodeId] : null
+    const init = phoneOverride ? { ...initBase, ...phoneOverride } : initBase
     const node = nodesLiveRef.current.find((n) => n.id === nodeId)
     if (!node || !init) {
       processCollabQueue()
@@ -286,7 +381,7 @@ export default function StackCanvas() {
 
   /* Send the cursor smoothly off-screen and reset scene state. */
   const leaveCollab = () => {
-    setCollab((c) => ({ ...c, x: CANVAS_W + 80, y: -30, phase: 'leaving', showBubble: false, typedMsg: '', typing: false }))
+    setCollab((c) => ({ ...c, x: CW + 80, y: -30, phase: 'leaving', showBubble: false, typedMsg: '', typing: false }))
     const t_end = setTimeout(() => {
       setCollab({ visible: false, x: 0, y: 0, phase: 'idle', showBubble: false, typedMsg: '', typing: false, bubbleSide: 'right', bubbleAbove: false })
       collabRunningRef.current = false
@@ -328,7 +423,7 @@ export default function StackCanvas() {
      * async, but avoid using it directly since collab state may lag. */
     let startX, startY
     setCollab((c) => {
-      startX = c.visible ? c.x : CANVAS_W + 60
+      startX = c.visible ? c.x : CW + 60
       startY = c.visible ? c.y : 40
       return {
         ...c,
@@ -378,8 +473,8 @@ export default function StackCanvas() {
       const BUBBLE_W = 260, BUBBLE_H = 72, EDGE_PAD = 12
       const cursorX = targetPos.x + 4
       const cursorY = targetPos.y + 4
-      const bubbleSide = (cursorX + 22 + BUBBLE_W + EDGE_PAD > CANVAS_W) ? 'left' : 'right'
-      const bubbleAbove = (cursorY + 30 + BUBBLE_H + EDGE_PAD > CANVAS_H)
+      const bubbleSide = (cursorX + 22 + BUBBLE_W + EDGE_PAD > CW) ? 'left' : 'right'
+      const bubbleAbove = (cursorY + 30 + BUBBLE_H + EDGE_PAD > CH)
 
       const t_bubble = setTimeout(() => {
         setCollab((c) => ({
@@ -482,6 +577,147 @@ export default function StackCanvas() {
     return false
   }
 
+  /* ----------------- Shared canvas board -----------------
+   * Rendered once, reused inside both the Mac window (desktop) and the
+   * iPhone frame (phone). Coordinates flow through CW/CH so switching
+   * layouts automatically rescales the viewBox + node positions.
+   */
+  const canvasBoard = (
+    <div
+      ref={containerRef}
+      className={`stack-canvas ${draggingId ? 'dragging' : ''}`}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      onDoubleClick={handleReset}
+    >
+      {/* Grid background.
+          Node positions are `%`-based against the container box, so the
+          SVG must stretch identically — use `preserveAspectRatio="none"`
+          on phone so the viewBox lines up 1:1 with the container's
+          percent grid regardless of the container's rendered aspect
+          ratio. Desktop keeps `xMidYMid slice` for the letterboxed look. */}
+      <svg
+        className="scv-grid"
+        viewBox={`0 0 ${CW} ${CH}`}
+        preserveAspectRatio={isPhone ? 'none' : 'xMidYMid slice'}
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern id="scv-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="11" cy="11" r="1" fill="rgba(232, 180, 140, 0.14)" />
+          </pattern>
+        </defs>
+        <rect width={CW} height={CH} fill="url(#scv-dots)" />
+      </svg>
+
+      {/* Static wires (no pulses) — same aspect-preservation rule as the
+          grid so wire endpoints stay glued to the % node positions. */}
+      <svg
+        className="scv-wires"
+        viewBox={`0 0 ${CW} ${CH}`}
+        preserveAspectRatio={isPhone ? 'none' : 'xMidYMid slice'}
+        aria-hidden="true"
+      >
+        {EDGES.map(([a, b], i) => {
+          const na = nodesById[a]
+          const nb = nodesById[b]
+          if (!na || !nb) return null
+          const dx = nb.x - na.x
+          const dy = nb.y - na.y
+          const len = Math.hypot(dx, dy) || 1
+          // Sag direction: on the wide horizontal desktop canvas we want
+          // cables to droop straight DOWN (gravity look). On the tall
+          // phone canvas, edges are mostly vertical, so a downward sag
+          // pushes the curve past its endpoint — sag PERPENDICULAR to
+          // the wire instead so the arc sits between the two nodes.
+          const sagMag = Math.min(len * (isPhone ? 0.10 : 0.18), isPhone ? 22 : 55)
+          const perpX = isPhone ? (-dy / len) * sagMag : 0
+          const perpY = isPhone ? ( dx / len) * sagMag : sagMag
+          const c1x = na.x + dx * 0.33 + perpX + (na.vx || 0) * 1.2
+          const c1y = na.y + dy * 0.33 + perpY + (na.vy || 0) * 1.2
+          const c2x = na.x + dx * 0.66 + perpX + (nb.vx || 0) * 1.2
+          const c2y = na.y + dy * 0.66 + perpY + (nb.vy || 0) * 1.2
+          const d = `M ${na.x} ${na.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${nb.x} ${nb.y}`
+          const hot = isEdgeHot(a, b)
+          const dim = isEdgeDim(a, b)
+          return (
+            <g key={`${a}-${b}`}>
+              <path d={d} className={`scv-edge-shadow ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`} />
+              <path d={d} className={`scv-edge-line ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`} />
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Nodes */}
+      <div className="scv-nodes-layer">
+        {nodes.map((n) => {
+          const color = CATEGORY_COLORS[n.category]
+          const isDragging = draggingId === n.id
+          const hot = isNodeHot(n)
+          const dim = isNodeDim(n)
+          const leftPct = (n.x / CW) * 100
+          const topPct  = (n.y / CH) * 100
+          return (
+            <button
+              key={n.id}
+              type="button"
+              className={`scv-node scv-node--${n.size} ${isDragging ? 'dragging' : ''} ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`}
+              style={{ left: `${leftPct}%`, top: `${topPct}%`, '--nc': color }}
+              onPointerDown={(e) => onPointerDown(e, n)}
+              onPointerEnter={() => setHoveredId(n.id)}
+              onPointerLeave={() => setHoveredId(null)}
+              onDragStart={(e) => e.preventDefault()}
+              onClick={(e) => e.preventDefault()}
+            >
+              <span className="scv-node-dot" />
+              <span className="scv-node-label">{n.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Collaborator cursor — "Puneeth" ghost pointer */}
+      {collab.visible && (
+        <div
+          className={`scv-collab scv-collab--${collab.phase}`}
+          style={{
+            left: `${(collab.x / CW) * 100}%`,
+            top:  `${(collab.y / CH) * 100}%`,
+          }}
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24" className="scv-collab-cursor" width="22" height="22">
+            <path
+              d="M4 2 L4 20 L9 15.2 L12.4 22 L15.3 20.5 L11.9 13.9 L18.5 12.8 Z"
+              fill="var(--accent)"
+              stroke="#1a0e08"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="scv-collab-tag">Puneeth</span>
+          {collab.showBubble && (
+            <div
+              className={`scv-collab-bubble scv-collab-bubble--${collab.bubbleSide} ${collab.bubbleAbove ? 'above' : 'below'}`}
+            >
+              <div className="scv-collab-bubble-head">
+                <span className="scv-collab-avatar">P</span>
+                <span className="scv-collab-name">Puneeth</span>
+                <span className="scv-collab-time">just now</span>
+              </div>
+              <p className="scv-collab-msg">
+                {collab.typedMsg}
+                {collab.typing && <span className="scv-collab-caret" />}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div className="stack-canvas-wrap">
       {/* Left info panel — sits alongside the mac window on desktop */}
@@ -511,8 +747,9 @@ export default function StackCanvas() {
         </div>
       </aside>
 
-      {/* macOS window */}
-      <div className={`mac-window ${draggingId ? 'dragging' : ''}`}>
+      {/* macOS window — desktop + tablet. On phones (≤640px) the CSS hides
+          this and shows .scv-phone (the iPhone frame) below. */}
+      <div className={`mac-window scv-mac-shell ${draggingId ? 'dragging' : ''}`}>
         {/* Title bar with traffic lights */}
         <div className="mac-titlebar">
           <div className="mac-traffic">
@@ -546,154 +783,40 @@ export default function StackCanvas() {
             ))}
           </aside>
 
-          {/* Canvas */}
-          <div
-            ref={containerRef}
-            className={`stack-canvas ${draggingId ? 'dragging' : ''}`}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerLeave={onPointerUp}
-            onDoubleClick={handleReset}
-          >
-          {/* Grid background */}
-          <svg
-            className="scv-grid"
-            viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-          >
-            <defs>
-              <pattern id="scv-dots" width="22" height="22" patternUnits="userSpaceOnUse">
-                <circle cx="11" cy="11" r="1" fill="rgba(232, 180, 140, 0.14)" />
-              </pattern>
-            </defs>
-            <rect width={CANVAS_W} height={CANVAS_H} fill="url(#scv-dots)" />
-          </svg>
-
-          {/* Static wires (no pulses) */}
-          <svg
-            className="scv-wires"
-            viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-          >
-            {EDGES.map(([a, b], i) => {
-              const na = nodesById[a]
-              const nb = nodesById[b]
-              if (!na || !nb) return null
-
-              // Cubic Bezier with gravity sag + velocity drag.
-              // Control points are placed 1/3 and 2/3 along the line, then
-              // shifted DOWN by a distance-scaled sag amount. Each end's
-              // control point is also nudged by that end's velocity so the
-              // wire visibly trails a fast-moving node — think coiled cable.
-              const dx = nb.x - na.x
-              const dy = nb.y - na.y
-              const len = Math.hypot(dx, dy) || 1
-              const sag = Math.min(len * 0.18, 55) // droop, capped
-              const c1x = na.x + dx * 0.33 + (na.vx || 0) * 1.2
-              const c1y = na.y + dy * 0.33 + sag + (na.vy || 0) * 1.2
-              const c2x = na.x + dx * 0.66 + (nb.vx || 0) * 1.2
-              const c2y = na.y + dy * 0.66 + sag + (nb.vy || 0) * 1.2
-              const d = `M ${na.x} ${na.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${nb.x} ${nb.y}`
-
-              const hot = isEdgeHot(a, b)
-              const dim = isEdgeDim(a, b)
-              return (
-                <g key={`${a}-${b}`}>
-                  {/* Shadow under the wire — subtle depth cue */}
-                  <path
-                    d={d}
-                    className={`scv-edge-shadow ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`}
-                  />
-                  {/* Actual wire */}
-                  <path
-                    d={d}
-                    className={`scv-edge-line ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`}
-                  />
-                </g>
-              )
-            })}
-          </svg>
-
-          {/* Nodes */}
-          <div className="scv-nodes-layer">
-            {nodes.map((n) => {
-              const color = CATEGORY_COLORS[n.category]
-              const isDragging = draggingId === n.id
-              const hot = isNodeHot(n)
-              const dim = isNodeDim(n)
-              const leftPct = (n.x / CANVAS_W) * 100
-              const topPct  = (n.y / CANVAS_H) * 100
-              return (
-                <button
-                  key={n.id}
-                  type="button"
-                  className={`scv-node scv-node--${n.size} ${isDragging ? 'dragging' : ''} ${hot ? 'hot' : ''} ${dim ? 'dim' : ''}`}
-                  style={{
-                    left: `${leftPct}%`,
-                    top: `${topPct}%`,
-                    '--nc': color,
-                  }}
-                  onPointerDown={(e) => onPointerDown(e, n)}
-                  onPointerEnter={() => setHoveredId(n.id)}
-                  onPointerLeave={() => setHoveredId(null)}
-                  onDragStart={(e) => e.preventDefault()}
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <span className="scv-node-dot" />
-                  <span className="scv-node-label">{n.label}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Collaborator cursor — the "Puneeth" ghost pointer that swoops
-              in from the right, fixes your edit, and leaves a sticky
-              comment. Positioned in canvas logical coords, converted to %
-              so it stays aligned with nodes at any container width. */}
-          {collab.visible && (
-            <div
-              className={`scv-collab scv-collab--${collab.phase}`}
-              style={{
-                left: `${(collab.x / CANVAS_W) * 100}%`,
-                top:  `${(collab.y / CANVAS_H) * 100}%`,
-              }}
-              aria-hidden="true"
-            >
-              {/* Figma-style arrow cursor */}
-              <svg viewBox="0 0 24 24" className="scv-collab-cursor" width="22" height="22">
-                <path
-                  d="M4 2 L4 20 L9 15.2 L12.4 22 L15.3 20.5 L11.9 13.9 L18.5 12.8 Z"
-                  fill="var(--accent)"
-                  stroke="#1a0e08"
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              {/* Name tag */}
-              <span className="scv-collab-tag">Puneeth</span>
-
-              {/* Sticky comment bubble — message streams in char-by-char */}
-              {collab.showBubble && (
-                <div
-                  className={`scv-collab-bubble scv-collab-bubble--${collab.bubbleSide} ${collab.bubbleAbove ? 'above' : 'below'}`}
-                >
-                  <div className="scv-collab-bubble-head">
-                    <span className="scv-collab-avatar">P</span>
-                    <span className="scv-collab-name">Puneeth</span>
-                    <span className="scv-collab-time">just now</span>
-                  </div>
-                  <p className="scv-collab-msg">
-                    {collab.typedMsg}
-                    {collab.typing && <span className="scv-collab-caret" />}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-          </div>
+          {/* Interactive canvas board — rendered here on desktop/tablet only */}
+          {!isPhone && canvasBoard}
         </div>
+      </div>
+
+      {/* ============================================================
+       * PHONE VIEW — same interactive canvas (draggable nodes,
+       * Puneeth-cursor revert), rendered inside an iPhone 15 frame.
+       * Uses a vertical (PHONE_CANVAS_W × PHONE_CANVAS_H) layout.
+       * Hidden above 640px via CSS.
+       * ============================================================ */}
+      <div className="scv-phone">
+        <Iphone title="stack.graph">
+          <div className="scv-phone-tabs">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                className={`scv-phone-tab ${activeCategory === c.key ? 'active' : ''}`}
+                style={{ '--tc': CATEGORY_COLORS[c.key] }}
+                onClick={() =>
+                  setActiveCategory((cur) => (cur === c.key ? null : c.key))
+                }
+              >
+                <span className="scv-phone-tab-dot" />
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="scv-phone-canvas">{isPhone && canvasBoard}</div>
+
+          <div className="scv-phone-hint">This is my Tech Stack!</div>
+        </Iphone>
       </div>
     </div>
   )

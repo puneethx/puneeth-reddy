@@ -25,8 +25,8 @@ export default function App() {
     setThrowing(true)
     // Trigger actual download
     const a = document.createElement('a')
-    a.href = '/Puneeth_Reddy_Resume.docx'
-    a.download = 'Puneeth_Reddy_Resume.docx'
+    a.href = '/Puneeth_Reddy_Resume.pdf'
+    a.download = 'Puneeth_Reddy_Resume.pdf'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
